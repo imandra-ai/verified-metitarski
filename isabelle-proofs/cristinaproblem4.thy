@@ -1,5 +1,5 @@
 theory cristinaproblem4
-  imports Main Real
+  imports Main Real "~~/src/HOL/Library/Sum_of_Squares" AxiomsGeneral
 begin    
 
 lemma cristinaproblem4:
@@ -7,8 +7,6 @@ lemma cristinaproblem4:
 proof(rule ccontr)
   assume "\<not>( 2 \<le> (x::real) \<longrightarrow> 0 \<le> (x-2)*x )"
   then show False
-    
-    have "\<exists>y. 2\<le>y \<and> 0>(y-2)*y "
-  
-    
+    by sos
+qed
 end
