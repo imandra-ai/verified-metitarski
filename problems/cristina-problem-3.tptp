@@ -1,4 +1,4 @@
-fof(cristina_problem_1,conjecture, ! [X] : (! [Y] : (abs(X+Y) >= X+Y)) ).
+fof(cristina_problem_3,conjecture, ! [X] : (! [Y] : (abs(X+Y) >= X+Y)) ).
 
 include('Axioms/general.ax').
 include('Axioms/abs.ax').

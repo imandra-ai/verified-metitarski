@@ -1,5 +1,5 @@
 theory cristinaproblem4
-  imports Main Real "~~/src/HOL/Library/Sum_of_Squares" AxiomsGeneral
+  imports "~~/src/HOL/Library/Sum_of_Squares" AxiomsGeneral
 begin    
 
 lemma cristinaproblem4:
