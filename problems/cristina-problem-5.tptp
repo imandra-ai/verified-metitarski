@@ -1,0 +1,3 @@
+fof(cristina_problem_5,conjecture, ! [X] : ( interval(0, 1, 0, 2, X) => X*X>0 ) ).
+
+include('Axioms/general.ax').
