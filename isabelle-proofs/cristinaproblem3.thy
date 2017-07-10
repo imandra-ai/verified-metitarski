@@ -2,7 +2,7 @@ theory cristinaproblem3
   imports AxiomsGeneral AxiomsAbs "~~/src/HOL/Library/Sum_of_Squares"
 begin
   
-lemma "(x::real)+y \<le> abs (x+y)"
+lemma cristinaproblem3:"(x::real)+y \<le> abs (x+y)"
 proof(rule ccontr)
   assume hypothesis: "\<not> (x::real)+y \<le> abs (x+y)"
   
