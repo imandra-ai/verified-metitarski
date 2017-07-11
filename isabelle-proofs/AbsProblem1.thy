@@ -1,8 +1,8 @@
 theory AbsProblem1
-  imports AxiomsGeneral AxiomsAbs "~~/../Documents/afp/Special_Function_Bounds/Log_CF_Bounds" 
+  imports AxiomsGeneral AxiomsAbs LnBounds 
           "~~/src/HOL/Library/Sum_of_Squares"
 begin
- 
+    
 lemma abs_problem_1: 
   "0 \<le> (x::real) \<longrightarrow> abs(ln(1 + x) - x) \<le> x ^ 2"
   
@@ -21,7 +21,7 @@ proof(rule ccontr)
   have refute_0_0: "x < x * (1 + x * -1) * (1 + x) \<or>
                     x * (1 + x * -1) \<le> x / (1 + x) \<or>
                     1 + x \<le> 0"
-    using leq_right_divide_mul_pos_axiom by smt
+    using leq_right_divide_mul_pos_axiom by (simp add: not_le)
   
   (*canonicalize*)
   have refute_0_1: "x ^ 2 < abs(ln(1 + x) - x)"
@@ -56,7 +56,7 @@ proof(rule ccontr)
    (*arithmetic*)
    have refute_0_7: "x * (1 + x) < ln(1 + x) \<or> ln(1 + x) < x"    
      using refute_0_6
-     by (smt abs_ln_one_plus_x_minus_x_bound_nonneg less_1_mult ln_less_self negate_0_0)
+     using ln_add_one_self_le_self negate_0_0 by fastforce
   
    (*subst*)
    have refute_0_8: "\<not> (lgen False (ln(z::real)) (y::real)) \<or> ln(z) \<le> y"    
@@ -66,9 +66,8 @@ proof(rule ccontr)
    have refute_0_9: "\<not> (lgen False ((z::real) - 1) (y::real)) \<or> 
                      z \<le> 0 \<or> 
                      (lgen False (ln(z)) y)"
-     using ln_upper_1
-     by (smt lgen_le_neg_axiom lgen_le_pos_axiom)
-    
+     using ln_upper1
+     using  not_le by blast    
 
   (*resolve*)
    have refute_0_10: "\<not> (lgen False ((z::real) - 1) y) \<or>
@@ -84,7 +83,9 @@ proof(rule ccontr)
    have refute_0_12: "x * (1 + x) < -1 + (1 + x) \<or>
                       1 + x \<le> 0 \<or>
                       ln(1 + x) \<le> x * (1 + x)"
-     using refute_0_11 by (smt ln_le_minus_one)
+     using refute_0_11 
+     by (metis distrib_left le_add_same_cancel1 le_less_trans ln_add_one_self_le_self mult.right_neutral mult_minus_right mult_zero_left negate_0_0 not_less real_minus_mult_self_le)
+    
  
    (*resolve*)
    have refute_0_13: "x * (1 + x) < -1 + (1 +x) \<or>
@@ -95,7 +96,7 @@ proof(rule ccontr)
    (*arithmetic*)
    have refute_0_14: "0 < x * (x * -1) \<or> ln(1 + x) < x \<or> x \<le> -1"
      using refute_0_13
-     by (smt ln_add_one_self_le_self normalize_0_3 real_minus_mult_self_le refute_0_6)
+     using less_eq_real_def negate_0_0 by auto
 
    (*canonicalize*)
    have refute_0_15: "0 \<le> x"
@@ -103,7 +104,8 @@ proof(rule ccontr)
        
    (*decision*)
    have refute_0_16: " x * (x * -1) \<le> 0 \<or> x \<le> -1"  
-     using refute_0_15 by sos
+     using refute_0_15 
+   by (sos "((((A<0 * A<1) * R<1) + ((A<0 * R<1) * (R<1 * [x]^2))))")
        
    (*resolve*)
    have refute_0_17: "ln(1 + x) < x \<or> x \<le> -1"
@@ -143,18 +145,26 @@ proof(rule ccontr)
    have refute_0_24: "ln(1 + x) < x * (1 + x * -1) \<or>
                       x \<le> ln(1 + x)"
      using refute_0_23
-     by (smt distrib_left mult_cancel_left2)
+         proof -
+           have "x * x < \<bar>- x + ln (x + 1)\<bar>"
+             by (metis add.commute add_uminus_conv_diff power2_eq_square refute_0_1)
+           then have "ln (x + 1) < x + x * - x"
+             by (simp add: abs_if add.commute refute_0_19)
+           then show ?thesis
+             by (metis add.commute distrib_left mult.right_neutral mult_minus_right)
+         qed    
        
    (*subst*)
    have refute_0_25: "\<not> (lgen False q (ln(p))) \<or> q \<le> ln(p)"
      using lgen_le_neg_axiom by auto
+   
        
    (*subst*)
-   have refute_0_26: "\<not> (lgen False q ((p - 1)/p)) \<or> 
+   have refute_0_26: "\<not> (lgen False (q::real) (((p::real) - 1)/p)) \<or> 
                       p \<le> 0 \<or>
                       (lgen False q (ln(p)))"
-     using ln_lower_1 sledgehammer
-     by (smt divide_minus_left lgen_le_neg_axiom lgen_le_pos_axiom ln_diff_le ln_one)  
+     using ln_lower1
+     using not_le by blast  
      
    then show False
 qed      
