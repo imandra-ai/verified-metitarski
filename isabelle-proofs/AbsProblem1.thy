@@ -164,7 +164,26 @@ proof(rule ccontr)
                       p \<le> 0 \<or>
                       (lgen False q (ln(p)))"
      using ln_lower1
-     using not_le by blast  
+     using not_le by blast
+       
+   (*resolve*)
+   have refute_0_27: "\<not> (lgen False q ((p - 1) / p)) \<or> 
+                      p \<le> 0 \<or>
+                      q \<le> ln(p)"
+     using refute_0_26 refute_0_25 by auto
+       
+   (*arithmetic*)
+   have refute_0_28: "(-1 + p) / p < q \<or> 
+                      p \<le> 0 \<or>
+                      q \<le> ln(p)"
+     using refute_0_27 by (simp add: not_le)
+       
+   (*subst*)
+   have refute_0_29: "(-1 + (1 + x)) / (1 + x) < x * (1 + x * -1) \<or>
+                      x * (1 + x * -1) \<le> ln(1 + x) \<or>
+                      1 + x \<le> 0"
+     using refute_0_28
+     by (metis add.commute add_uminus_conv_diff le_less_trans ln_lower_1 ln_lower_1_eq not_le)
      
    then show False
 qed      
