@@ -49,7 +49,8 @@ proof(rule ccontr)
       
   (*decision*)
   have refute_0_11: "x * -1 \<le> y \<or> y \<le> x * -1"
-    using refute_0_10 by sos
+    using refute_0_10
+    by (sos "((((A<0 * (A<1 * A<2)) * R<1) + ((A<0 * R<1) * (R<1 * [x + y]^2))))")
       
   (*resolve*)
   have refute_0_12: "x * -1 \<le> y"

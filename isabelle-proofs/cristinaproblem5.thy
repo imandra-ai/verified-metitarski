@@ -25,7 +25,8 @@ proof(rule ccontr)
    
   (*decision*)    
   have refute_0_5: "x < 1"
-    using normalize_0_3 by sos
+    using normalize_0_3
+    by (sos "((R<1 + ((R<1 * (R<1/3 * [~2*x + 1]^2)) + (((A<=1 * R<1) * (R<4/3 * [1]^2)) + ((A<=0 * R<1) * (R<4/3 * [1]^2))))))")
       
   (*resolve*)    
   then show False
