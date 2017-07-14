@@ -1,7 +1,3 @@
-
-SZS status Theorem for ../../../verified-metitarski/problems/cristina-problem-5.tptp
-
-SZS output start CNFRefutation for ../../../verified-metitarski/problems/cristina-problem-5.tptp
 cnf(interval_elim1, axiom, (~ interval(R, A, S, B, X) | lgen(R, A, X))).
 
 fof(cristina_problem_5, conjecture,

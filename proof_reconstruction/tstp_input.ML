@@ -17,6 +17,3 @@ fun read file =
     end
 
 end;
-
-(*tstp_input.read "Documents/internship/verified-metitarski/problems/cristina-problem-5.tstpout"*)
-(*tstp_input.read "Documents/internship/verified-metitarski/proof_reconstruction/input.txt"*)
