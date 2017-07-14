@@ -9,11 +9,13 @@ struct
 fun read file =
     let val inStream = TextIO.openIn file
         fun line_by_line stream = 
-        case TextIO.inputLine stream of
-            SOME s => s ^ (line_by_line stream)
-           |NONE => ""
+            case TextIO.inputLine stream of
+                SOME s => s ^ (line_by_line stream)
+               |NONE => ""
+        val input_string = line_by_line inStream
+        val _ = TextIO.closeIn inStream
     in
-        line_by_line inStream   
+        input_string   
     end
 
 end;
