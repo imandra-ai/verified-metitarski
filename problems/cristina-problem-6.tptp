@@ -1,0 +1,8 @@
+cnf(ax1, axiom,
+    ( ~ man(X) | mortal(X) )).
+
+cnf(ax2, axiom,
+   (man(socrates))).
+
+cnf(neg_goal,negated_conjecture,
+    ( ~mortal(socrates))).

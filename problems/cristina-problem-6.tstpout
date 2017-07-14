@@ -1,0 +1,18 @@
+cnf(ax1, axiom, (~ man(X) | mortal(X))).
+
+cnf(ax2, axiom, (man(socrates))).
+
+cnf(neg_goal, negated_conjecture, (~ mortal(socrates))).
+
+cnf(refute_0_0, plain, (~ man(socrates) | mortal(socrates)),
+    inference(subst, [], [ax1])).
+
+cnf(refute_0_1, plain, (~ man(socrates)),
+    inference(resolve, [], [refute_0_0, neg_goal])).
+
+cnf(refute_0_2, plain, ($false),
+    inference(resolve, [], [ax2, refute_0_1])).
+SZS output end CNFRefutation for ../../../verified-metitarski/problems/cristina-problem-6.tptp
+
+Processor time: 0.000 = 0.000 (Metis) + 0.000 (RCF)
+Maximum weight in proof search: 63
