@@ -1,1 +1,58 @@
-some input
+---------------------------------------------------------------------------
+SZS status Theorem for ../../../verified-metitarski/problems/cristina-problem-5.tptp
+
+SZS output start CNFRefutation for ../../../verified-metitarski/problems/cristina-problem-5.tptp
+cnf(interval_elim1, axiom, (~ interval(R, A, S, B, X) | lgen(R, A, X))).
+
+fof(cristina_problem_5, conjecture,
+    (! [X] : (interval(0, 1, 0, 2, X) => less (0, multiply(X, X))))).
+
+fof(subgoal_0, plain,
+    (! [X] : (interval(0, 1, 0, 2, X) => less (0, multiply(X, X)))),
+    inference(strip, [], [cristina_problem_5])).
+
+fof(negate_0_0, plain,
+    (~ ! [X] : (interval(0, 1, 0, 2, X) => less (0, multiply(X, X)))),
+    inference(negate, [], [subgoal_0])).
+
+fof(normalize_0_0, plain,
+    (? [X] : (less_equal(multiply(X, X), 0) & interval(0, 1, 0, 2, X))),
+    inference(canonicalize, [], [negate_0_0])).
+
+fof(normalize_0_1, plain,
+    (less_equal(multiply(skoXC1, skoXC1), 0) &
+     interval(0, 1, 0, 2, skoXC1)),
+    inference(skolemize, [], [normalize_0_0])).
+
+fof(normalize_0_2, plain, (interval(0, 1, 0, 2, skoXC1)),
+    inference(conjunct, [], [normalize_0_1])).
+
+fof(normalize_0_3, plain, (less_equal(multiply(skoXC1, skoXC1), 0)),
+    inference(conjunct, [], [normalize_0_1])).
+
+cnf(refute_0_0, plain, (interval(0, 1, 0, 2, skoXC1)),
+    inference(canonicalize, [], [normalize_0_2])).
+
+cnf(refute_0_1, plain,
+    (~ interval(0, 1, 0, 2, skoXC1) | lgen(0, 1, skoXC1)),
+    inference(subst, [], [interval_elim1])).
+
+cnf(refute_0_2, plain, (lgen(0, 1, skoXC1)),
+    inference(resolve, [], [refute_0_0, refute_0_1])).
+
+cnf(refute_0_3, plain, (less_equal(1, skoXC1)),
+    inference(arithmetic, [], [refute_0_2])).
+
+cnf(refute_0_4, plain, (less_equal(multiply(skoXC1, skoXC1), 0)),
+    inference(canonicalize, [], [normalize_0_3])).
+
+cnf(refute_0_5, plain, (less (skoXC1, 1)),
+    inference(decision, [], [refute_0_4])).
+
+cnf(refute_0_6, plain, ($false),
+    inference(resolve, [], [refute_0_3, refute_0_5])).
+SZS output end CNFRefutation for ../../../verified-metitarski/problems/cristina-problem-5.tptp
+
+Processor time: 0.016 = 0.012 (Metis) + 0.004 (RCF)
+Maximum weight in proof search: 395
+
