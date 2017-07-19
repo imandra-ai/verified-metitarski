@@ -36,11 +36,27 @@ let (*Parse the tstp string into the atp_proof datatype. The first argument, "pr
     (*Redirect the refutation graph*)
     val direct_graph = redirect_graph axioms tainted bot refute_graph
 
-(*----------My function to transform a direct_proof into an isar_proof----------*)
-
-    (*Transform a clause to a term. Type error in the steps function. Why?*)
-(*    val tainted = tainted_atoms_of_refute_graph refute_graph conjs
+    (*Transform a clause to a term. Type error in the steps function. Why? First need to termify the atp_proof*)
+    val tainted = tainted_atoms_of_refute_graph refute_graph conjs
     val is_clause_tainted = exists (member (op =) tainted)
+
+    
+    fun choose_type_enc strictness best_type_enc format =
+      the_default best_type_enc
+      #> ATP_Problem_Generate.type_enc_of_string strictness
+      #> ATP_Problem_Generate.adjust_type_enc format
+
+    (*Termify atp_proof*)
+    val atp_proof = 
+        atp_proof 
+            |> termify_atp_proof 
+                @{context} 
+                "" (*name*)
+                ATP_Problem.CNF (*format*)
+                (choose_type_enc ATP_Problem_Generate.Strict "tc_native" (*from ATP_Problem_Generate.type_enc_of_string*) ATP_Problem.CNF NONE (*?*)) (*type encoding*)
+                Symtab.empty (*? pool*)
+                [] (*? lifted*) 
+                Symtab.empty (*sym_tab*)
 
     val steps =
       Symtab.empty
@@ -55,6 +71,9 @@ let (*Parse the tstp string into the atp_proof datatype. The first argument, "pr
                   I))))
         atp_proof
 
+    val finish_off = close_form #> rename_bound_vars
+
+    (*Transform the rhs of a sequent into a term*)
     fun prop_of_clause [(num, _)] = Symtab.lookup steps num |> the |> snd |> finish_off
       | prop_of_clause names =
         let
@@ -68,21 +87,51 @@ let (*Parse the tstp string into the atp_proof datatype. The first argument, "pr
           | _ => fold (curry s_disj) lits @{term False})
         end
         |> HOLogic.mk_Trueprop |> finish_off
-*)
 
+
+
+    fun raw_label_of_num num = (num, 0)
+
+    fun label_of_clause [(num, _)] = raw_label_of_num num
+      | label_of_clause c = (space_implode "___" (map (fst o raw_label_of_num o fst) c), 0)
+
+    fun add_global_fact ss = apsnd (union (op =) ss)
+
+    fun add_fact_of_dependency [(_, ss as _ :: _)] = add_global_fact ss
+      | add_fact_of_dependency names = apfst (insert (op =) (label_of_clause names))
+
+
+    (*Transform the lhs of a sequent into facts*)
+    fun deps gamma = ([], [])
+      |> fold add_fact_of_dependency gamma
+(*      |> is_maybe_ext_rule rule ? add_global_fact [short_thm_name ctxt ext]   *)(*Probably not need this*)
+      |> sort_facts
+
+(*----------My function to transform a direct_proof into an isar_proof----------*)
     fun my_isar_steps accum ([] : direct_proof) = rev accum
        
        |my_isar_steps accum (Have (id, (gamma, c)) :: infs) =
-            (Prove([Then], [], ("bla", 0), (prop_of_clause c), [], gamma, [Metis_Method (NONE, NONE)],"")) :: accum
+            my_isar_steps ((Prove([Then], [], (label_of_clause c), (prop_of_clause c), [], 
+                   (deps gamma) (*gamma - assumptions*), [Metis_Method (NONE, NONE)],"")) :: accum) infs
 
-       |my_isar_steps accum _ = accum
+       |my_isar_steps accum (_ :: infs) = my_isar_steps accum infs  (*No treating the "Cases" case for now*)
+
+
+    fun get_role keep_role ((num, _), role, t, rule, _) =
+      if keep_role role then SOME ((raw_label_of_num num, t), rule) else NONE
+
+    val assms = map_filter (Option.map fst o get_role (curry (op =) ATP_Problem.Hypothesis)) atp_proof
             
+    fun my_isar_proof fix assms infs =
+        Proof (fix, assms, (my_isar_steps [] infs))
 
-    fun my_isar_proof direct_proof = 
-        Proof([], [], (my_isar_steps [] direct_proof))
+    val the_isar_proof = my_isar_proof [] assms direct_graph     (*assms is empty for some reason*)
     
 in
     (*string_of_refute_graph refute_graph;*)
-    string_of_direct_proof direct_graph
+    (*string_of_direct_proof direct_graph*)
+    (*atp_proof*)
+    (*the_isar_proof*)
+    string_of_isar_proof @{context} 1 1 the_isar_proof
 end;
 
