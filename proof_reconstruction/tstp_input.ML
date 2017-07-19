@@ -8,7 +8,7 @@ struct
 
 (* Also remove lines before the beginning of the proof. Works in SML but not Isabelle/ML *)
 fun read file =
-    let val sawFirstLine = Unsynchronized.ref false
+    let val sawFirstLine = Unsynchronized.ref false (*in Isabelle/ML*)
         val inStream = TextIO.openIn file
         fun line_by_line stream = 
             case TextIO.inputLine stream of
