@@ -16,6 +16,14 @@ let (*Parse the tstp string into the atp_proof datatype. The first argument, "pr
 
     val bot = #1 (List.last atp_proof)
 
+    fun add_line_pass1 (line as (name, role, t, rule, [])) lines =
+        if role = ATP_Problem.Axiom then
+          lines (* axioms (facts) need no proof lines *)
+        else line::lines
+      | add_line_pass1 line lines = line :: lines
+
+    val atp_proof =
+      fold_rev add_line_pass1 atp_proof []
 
     val conjs =
               map_filter (fn (name, role, _, _, _) =>
@@ -57,6 +65,7 @@ let (*Parse the tstp string into the atp_proof datatype. The first argument, "pr
                 Symtab.empty (*? pool*)
                 [] (*? lifted*) 
                 Symtab.empty (*sym_tab*)
+
 
     val steps =
       Symtab.empty
@@ -108,13 +117,18 @@ let (*Parse the tstp string into the atp_proof datatype. The first argument, "pr
       |> sort_facts
 
 (*----------My function to transform a direct_proof into an isar_proof----------*)
-    fun my_isar_steps accum ([] : direct_proof) = rev accum
+    fun my_isar_steps _ accum ([] : direct_proof) = rev accum
        
-       |my_isar_steps accum (Have (id, (gamma, c)) :: infs) =
-            my_isar_steps ((Prove([Then], [], (label_of_clause c), (prop_of_clause c), [], 
+       |my_isar_steps outer accum (Have (id, (gamma, c)) :: infs) =
+            let val show_then_have = if null infs then [Show]
+                                     else if outer then [] else [Then]
+                val label = if null infs then no_label else label_of_clause c
+            in
+                my_isar_steps false ((Prove(show_then_have, [], label, (prop_of_clause c), [], 
                    (deps gamma) (*gamma - assumptions*), [Metis_Method (NONE, NONE)],"")) :: accum) infs
+            end
 
-       |my_isar_steps accum (_ :: infs) = my_isar_steps accum infs  (*No treating the "Cases" case for now*)
+       |my_isar_steps outer accum (_ :: infs) = my_isar_steps outer accum infs  (*Not treating the "Cases" case for now*)
 
 
     fun get_role keep_role ((num, _), role, t, rule, _) =
@@ -123,14 +137,14 @@ let (*Parse the tstp string into the atp_proof datatype. The first argument, "pr
     val assms = map_filter (Option.map fst o get_role (curry (op =) ATP_Problem.Hypothesis)) atp_proof
             
     fun my_isar_proof fix assms infs =
-        Proof (fix, assms, (my_isar_steps [] infs))
+        Proof (fix, assms, (my_isar_steps true [] infs))
 
     val the_isar_proof = my_isar_proof [] assms direct_graph     (*assms is empty for some reason*)
     
 in
-    (*string_of_refute_graph refute_graph;*)
-    (*string_of_direct_proof direct_graph*)
     (*atp_proof*)
+    (*string_of_refute_graph refute_graph*)
+    (*string_of_direct_proof direct_graph*)
     (*the_isar_proof*)
     string_of_isar_proof @{context} 1 1 the_isar_proof
 end;
