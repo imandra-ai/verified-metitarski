@@ -1,14 +1,18 @@
+---------------------------------------------------------------------------
+SZS status Theorem for ../../../verified-metitarski/problems/cristina-problem-5.tptp
+
+SZS output start CNFRefutation for ../../../verified-metitarski/problems/cristina-problem-5.tptp
 cnf(interval_elim1, axiom, (~ interval(R, A, S, B, X) | lgen(R, A, X))).
 
 fof(cristina_problem_5, conjecture,
-    (! [X] : (interval(0, 1, 0, 2, X) => 0 < multiply(X, X)))).
+    (! [X] : (interval(0, 1, 0, 2, X) => less (0, multiply(X, X))))).
 
 fof(subgoal_0, plain,
-    (! [X] : (interval(0, 1, 0, 2, X) => 0 < multiply(X, X))),
+    (! [X] : (interval(0, 1, 0, 2, X) => less (0, multiply(X, X)))),
     inference(strip, [], [cristina_problem_5])).
 
 fof(negate_0_0, plain,
-    (~ ! [X] : (interval(0, 1, 0, 2, X) => 0 < multiply(X, X))),
+    (~ ! [X] : (interval(0, 1, 0, 2, X) => less (0, multiply(X, X)))),
     inference(negate, [], [subgoal_0])).
 
 fof(normalize_0_0, plain,
@@ -42,12 +46,12 @@ cnf(refute_0_3, plain, (less_equal(1, skoXC1)),
 cnf(refute_0_4, plain, (less_equal(multiply(skoXC1, skoXC1), 0)),
     inference(canonicalize, [], [normalize_0_3])).
 
-cnf(refute_0_5, plain, (skoXC1 < 1),
+cnf(refute_0_5, plain, (less (skoXC1, 1)),
     inference(decision, [], [refute_0_4])).
 
 cnf(refute_0_6, plain, ($false),
     inference(resolve, [], [refute_0_3, refute_0_5])).
 SZS output end CNFRefutation for ../../../verified-metitarski/problems/cristina-problem-5.tptp
 
-Processor time: 0.020 = 0.012 (Metis) + 0.008 (RCF)
+Processor time: 0.008 = 0.008 (Metis) + 0.000 (RCF)
 Maximum weight in proof search: 395

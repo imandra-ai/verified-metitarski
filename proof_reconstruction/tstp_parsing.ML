@@ -11,8 +11,9 @@ open Sledgehammer_Proof_Methods;
 
     
 let (*Parse the tstp string into the atp_proof datatype. The first argument, "problem", is not really needed.*)
+
     val atp_proof = ATP_Satallax.atp_proof_of_tstplike_proof "1" [("2", [ATP_Problem.Class_Decl("3", "4", [])])] 
-                        (TSTP_Input.read "Documents/internship/verified-metitarski/problems/cristina-problem-6.tstpout")
+                        (TSTP_Input.read "Documents/internship/verified-metitarski/problems/cristina-problem-2.tstpout")
 
     val bot = #1 (List.last atp_proof)
 
@@ -54,17 +55,27 @@ let (*Parse the tstp string into the atp_proof datatype. The first argument, "pr
       #> ATP_Problem_Generate.type_enc_of_string strictness
       #> ATP_Problem_Generate.adjust_type_enc format
 
-    (*Termify atp_proof*)
+    (*Translate some of the tstp prefix operations to Isabelle*)
+    val pool = Symtab.empty
+                |> Symtab.update_new ("multiply", "times")
+                |> Symtab.update_new ("add", "plus")
+                |> Symtab.update_new ("subtract", "minus")
+                |> Symtab.update_new ("neg", "uminus")
+                |> Symtab.update_new ("less_equal", "less_eq")
+                
+
+    (*Termify atp_proof and factify*)
     val atp_proof = 
         atp_proof 
             |> termify_atp_proof 
                 @{context} 
                 "" (*name*)
                 ATP_Problem.CNF (*format*)
-                (choose_type_enc ATP_Problem_Generate.Strict "tc_native" (*from ATP_Problem_Generate.type_enc_of_string*) ATP_Problem.CNF NONE (*?*)) (*type encoding*)
-                Symtab.empty (*? pool*)
+                (choose_type_enc ATP_Problem_Generate.Strict "mono_native" (*from ATP_Problem_Generate.type_enc_of_string*) ATP_Problem.CNF NONE (*?*)) (*type encoding*)
+                pool (*Symtab.empty ? pool*)
                 [] (*? lifted*) 
-                Symtab.empty (*sym_tab*)
+                Symtab.empty (*? sym_tab*)
+(*            |> factify_atp_proof (map fst []) hyp_ts concl_t  *)
 
 
     val steps =
@@ -122,9 +133,18 @@ let (*Parse the tstp string into the atp_proof datatype. The first argument, "pr
        |my_isar_steps outer accum (Have (id, (gamma, c)) :: infs) =
             let val show_then_have = if null infs then [Show]
                                      else if outer then [] else [Then]
+
                 val label = if null infs then no_label else label_of_clause c
+
+                val prop = prop_of_clause c
+
+(*                fun is_fixed ctxt = Variable.is_declared ctxt orf Name.is_skolem                
+                fun skolems_of ctxt t = Term.add_frees t [] |> filter_out (is_fixed ctxt o fst) |> rev
+                val skolems = skolems_of @{context} prop
+*)
+                val skolems = []
             in
-                my_isar_steps false ((Prove(show_then_have, [], label, (prop_of_clause c), [], 
+                my_isar_steps false ((Prove(show_then_have, skolems, label, prop, [], 
                    (deps gamma) (*gamma - assumptions*), [Metis_Method (NONE, NONE)],"")) :: accum) infs
             end
 

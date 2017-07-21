@@ -1,4 +1,4 @@
-theory TestProof
+theory CristinaProblem6
   imports Main
 begin
 
