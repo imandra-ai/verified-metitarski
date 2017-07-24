@@ -1,9 +1,11 @@
 theory Isar
-  imports Main
+  imports Main Real
 begin
 
+declare[[ML_print_depth=50]]  
+  
 ML_file "~/Documents/internship/verified-metitarski/proof_reconstruction/tstp_input.ML" 
-    
+
 ML_file "~/Documents/internship/verified-metitarski/proof_reconstruction/tstp_parsing.ML"
 
 ML\<open>

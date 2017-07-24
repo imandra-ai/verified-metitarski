@@ -10,46 +10,14 @@ open Sledgehammer_Isar_Proof;
 open Sledgehammer_Proof_Methods;
 
     
-let (*Parse the tstp string into the atp_proof datatype. The first argument, "problem", is not really needed.*)
-
+let 
+    (*Parse the tstp string into the atp_proof datatype. The first argument, "problem", is not really needed.*)
     val atp_proof = ATP_Satallax.atp_proof_of_tstplike_proof "1" [("2", [ATP_Problem.Class_Decl("3", "4", [])])] 
                         (TSTP_Input.read "Documents/internship/verified-metitarski/problems/cristina-problem-2.tstpout")
 
-    val bot = #1 (List.last atp_proof)
 
-    fun add_line_pass1 (line as (name, role, t, rule, [])) lines =
-        if role = ATP_Problem.Axiom then
-          lines (* axioms (facts) need no proof lines *)
-        else line::lines
-      | add_line_pass1 line lines = line :: lines
 
-    val atp_proof =
-      fold_rev add_line_pass1 atp_proof []
-
-    val conjs =
-              map_filter (fn (name, role, _, _, _) =>
-                  if member (op =) [ATP_Problem.Conjecture, ATP_Problem.Negated_Conjecture] role then SOME name else NONE)
-                atp_proof
-
-    (*Construct the refutation graph from the atp_proof datastructure*)
-    val refute_graph = (atp_proof
-                              |> map (fn (name, _, _, _, from) => (from, name))
-                              |> make_refute_graph bot
-                              |> fold (Atom_Graph.default_node o rpair ()) conjs
-                       )
-    
-    val axioms = axioms_of_refute_graph refute_graph conjs
-
-    val tainted = tainted_atoms_of_refute_graph refute_graph conjs
-
-    (*Redirect the refutation graph*)
-    val direct_graph = redirect_graph axioms tainted bot refute_graph
-
-    (*Transform a clause to a term. Type error in the steps function. Why? First need to termify the atp_proof*)
-    val tainted = tainted_atoms_of_refute_graph refute_graph conjs
-    val is_clause_tainted = exists (member (op =) tainted)
-
-    
+   
     fun choose_type_enc strictness best_type_enc format =
       the_default best_type_enc
       #> ATP_Problem_Generate.type_enc_of_string strictness
@@ -65,17 +33,79 @@ let (*Parse the tstp string into the atp_proof datatype. The first argument, "pr
                 
 
     (*Termify atp_proof and factify*)
-    val atp_proof = 
+    val termified_atp_proof = 
         atp_proof 
             |> termify_atp_proof 
                 @{context} 
                 "" (*name*)
                 ATP_Problem.CNF (*format*)
-                (choose_type_enc ATP_Problem_Generate.Strict "mono_native" (*from ATP_Problem_Generate.type_enc_of_string*) ATP_Problem.CNF NONE (*?*)) (*type encoding*)
+                (choose_type_enc ATP_Problem_Generate.Non_Strict "mono_native" (*from ATP_Problem_Generate.type_enc_of_string*) ATP_Problem.CNF NONE (*?*)) (*type encoding*)
                 pool (*Symtab.empty ? pool*)
                 [] (*? lifted*) 
                 Symtab.empty (*? sym_tab*)
 (*            |> factify_atp_proof (map fst []) hyp_ts concl_t  *)
+
+
+
+    (*Change all free type variables to real*)
+    fun to_real_types (Type (tname, tys)) = Type (tname, (map to_real_types tys))
+       |to_real_types (TFree (tname, s)) = Type ("Real.real", [])
+       |to_real_types (TVar (index, s)) = TVar (index, s)
+
+    fun to_real_term (Const (name, ty)) = Const (name, to_real_types ty)
+
+        |to_real_term (Free (name, ty)) = Free(name, to_real_types ty)
+            
+        |to_real_term (Var (index, ty)) =  Var (index, to_real_types ty)
+
+        |to_real_term (Bound i) = Bound i 
+
+        |to_real_term (Abs (x, ty, t1)) = Abs (x, to_real_types ty, (to_real_term t1))
+
+        |to_real_term (t1 $ t2) = ((to_real_term t1) $ (to_real_term t2))
+
+
+    val termified_atp_proof =
+        termified_atp_proof
+            |> map (fn (name, role, the_term, rule, from) => 
+                        (name, role, (to_real_term the_term), rule, from) ) 
+
+
+    val bot = #1 (List.last termified_atp_proof)
+
+    fun add_line_pass1 (line as (name, role, t, rule, [])) lines =
+        if role = ATP_Problem.Axiom then
+          lines (* axioms (facts) need no proof lines *)
+        else line::lines
+      | add_line_pass1 line lines = line :: lines
+
+    val termified_atp_proof =
+      fold_rev add_line_pass1 termified_atp_proof []
+
+    val conjs =
+              map_filter (fn (name, role, _, _, _) =>
+                  if member (op =) [ATP_Problem.Conjecture, ATP_Problem.Negated_Conjecture] role then SOME name else NONE)
+                termified_atp_proof
+
+    (*Construct the refutation graph from the atp_proof datastructure*)
+    val refute_graph = (termified_atp_proof
+                              |> map (fn (name, _, _, _, from) => (from, name))
+                              |> make_refute_graph bot
+                              |> fold (Atom_Graph.default_node o rpair ()) conjs
+                       )
+ 
+    val tainted = tainted_atoms_of_refute_graph refute_graph conjs
+    val is_clause_tainted = exists (member (op =) tainted)
+   
+    val axioms = axioms_of_refute_graph refute_graph conjs
+
+    val tainted = tainted_atoms_of_refute_graph refute_graph conjs
+
+    (*Redirect the refutation graph*)
+    val direct_graph = redirect_graph axioms tainted bot refute_graph
+
+
+
 
 
     val steps =
@@ -89,7 +119,7 @@ let (*Parse the tstp string into the atp_proof datatype. The first argument, "pr
                   #> HOLogic.mk_Trueprop
                 else
                   I))))
-        atp_proof
+        termified_atp_proof
 
     val finish_off = close_form #> rename_bound_vars
 
@@ -154,18 +184,18 @@ let (*Parse the tstp string into the atp_proof datatype. The first argument, "pr
     fun get_role keep_role ((num, _), role, t, rule, _) =
       if keep_role role then SOME ((raw_label_of_num num, t), rule) else NONE
 
-    val assms = map_filter (Option.map fst o get_role (curry (op =) ATP_Problem.Hypothesis)) atp_proof
+    val assms = map_filter (Option.map fst o get_role (curry (op =) ATP_Problem.Hypothesis)) termified_atp_proof
             
     fun my_isar_proof fix assms infs =
         Proof (fix, assms, (my_isar_steps true [] infs))
 
-    val the_isar_proof = my_isar_proof [] assms direct_graph     (*assms is empty for some reason*)
+    val the_isar_proof = my_isar_proof [] assms direct_graph
     
 in
-    (*atp_proof*)
+    (*termified_atp_proof*)
     (*string_of_refute_graph refute_graph*)
     (*string_of_direct_proof direct_graph*)
-    (*the_isar_proof*)
-    string_of_isar_proof @{context} 1 1 the_isar_proof
+    the_isar_proof
+    (*string_of_isar_proof @{context} 1 1 the_isar_proof*)
 end;
 

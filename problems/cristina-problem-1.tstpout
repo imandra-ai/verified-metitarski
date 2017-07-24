@@ -1,0 +1,45 @@
+---------------------------------------------------------------------------
+SZS status Theorem for ../../../verified-metitarski/problems/cristina-problem-1.tptp
+
+SZS output start CNFRefutation for ../../../verified-metitarski/problems/cristina-problem-1.tptp
+fof(cristina_problem_1, conjecture,
+    (! [X] : (less_equal(0, X) => less_equal(0, power(X, 2))))).
+
+fof(subgoal_0, plain,
+    (! [X] : (less_equal(0, X) => less_equal(0, power(X, 2)))),
+    inference(strip, [], [cristina_problem_1])).
+
+fof(negate_0_0, plain,
+    (~ ! [X] : (less_equal(0, X) => less_equal(0, power(X, 2)))),
+    inference(negate, [], [subgoal_0])).
+
+fof(normalize_0_0, plain,
+    (? [X] : (less (power(X, 2), 0) & less_equal(0, X))),
+    inference(canonicalize, [], [negate_0_0])).
+
+fof(normalize_0_1, plain,
+    (less (power(skoXC1, 2), 0) & less_equal(0, skoXC1)),
+    inference(skolemize, [], [normalize_0_0])).
+
+fof(normalize_0_2, plain, (less (power(skoXC1, 2), 0)),
+    inference(conjunct, [], [normalize_0_1])).
+
+fof(normalize_0_3, plain, (less_equal(0, skoXC1)),
+    inference(conjunct, [], [normalize_0_1])).
+
+cnf(refute_0_0, plain, (less (power(skoXC1, 2), 0)),
+    inference(canonicalize, [], [normalize_0_2])).
+
+cnf(refute_0_1, plain,
+    (less (0, multiply(skoXC1, multiply(skoXC1, neg(1))))),
+    inference(arithmetic, [], [refute_0_0])).
+
+cnf(refute_0_2, plain, (less_equal(0, skoXC1)),
+    inference(canonicalize, [], [normalize_0_3])).
+
+cnf(refute_0_3, plain, ($false),
+    inference(decision, [], [refute_0_1, refute_0_2])).
+SZS output end CNFRefutation for ../../../verified-metitarski/problems/cristina-problem-1.tptp
+
+Processor time: 0.004 = 0.000 (Metis) + 0.004 (RCF)
+Maximum weight in proof search: 0
