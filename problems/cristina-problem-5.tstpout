@@ -53,5 +53,5 @@ cnf(refute_0_6, plain, ($false),
     inference(resolve, [], [refute_0_3, refute_0_5])).
 SZS output end CNFRefutation for ../../../verified-metitarski/problems/cristina-problem-5.tptp
 
-Processor time: 0.008 = 0.008 (Metis) + 0.000 (RCF)
+Processor time: 0.016 = 0.008 (Metis) + 0.008 (RCF)
 Maximum weight in proof search: 395

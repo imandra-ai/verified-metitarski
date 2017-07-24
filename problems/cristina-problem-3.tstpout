@@ -1,0 +1,95 @@
+---------------------------------------------------------------------------
+SZS status Theorem for ../../../verified-metitarski/problems/cristina-problem-3.tptp
+
+SZS output start CNFRefutation for ../../../verified-metitarski/problems/cristina-problem-3.tptp
+cnf(abs_nonnegative, axiom, (less (X, 0) | =(abs(X), X))).
+
+cnf(abs_negative, axiom, (less_equal(0, X) | =(abs(X), neg(X)))).
+
+fof(cristina_problem_3, conjecture,
+    (! [X, Y] : less_equal(add(X, Y), abs(add(X, Y))))).
+
+fof(subgoal_0, plain, (! [X, Y] : less_equal(add(X, Y), abs(add(X, Y)))),
+    inference(strip, [], [cristina_problem_3])).
+
+fof(negate_0_0, plain,
+    (~ ! [X, Y] : less_equal(add(X, Y), abs(add(X, Y)))),
+    inference(negate, [], [subgoal_0])).
+
+fof(normalize_0_0, plain, (? [X, Y] : less (abs(add(X, Y)), add(X, Y))),
+    inference(canonicalize, [], [negate_0_0])).
+
+fof(normalize_0_1, plain,
+    (less (abs(add(skoXC1, skoYC1)), add(skoXC1, skoYC1))),
+    inference(skolemize, [], [normalize_0_0])).
+
+cnf(refute_0_0, plain,
+    (less (abs(add(skoXC1, skoYC1)), add(skoXC1, skoYC1))),
+    inference(canonicalize, [], [normalize_0_1])).
+
+cnf(refute_0_1, plain,
+    (less_equal(0, add(skoXC1, skoYC1)) |
+     =(abs(add(skoXC1, skoYC1)), neg(add(skoXC1, skoYC1)))),
+    inference(subst, [], [abs_negative])).
+
+cnf(refute_0_2, plain,
+    (less (neg(add(skoXC1, skoYC1)), add(skoXC1, skoYC1)) |
+     abs(add(skoXC1, skoYC1)) != neg(add(skoXC1, skoYC1)) |
+     less_equal(add(skoXC1, skoYC1), abs(add(skoXC1, skoYC1)))),
+    introduced(tautology, [equality])).
+
+cnf(refute_0_3, plain,
+    (less (neg(add(skoXC1, skoYC1)), add(skoXC1, skoYC1)) |
+     less_equal(0, add(skoXC1, skoYC1)) |
+     less_equal(add(skoXC1, skoYC1), abs(add(skoXC1, skoYC1)))),
+    inference(resolve, [], [refute_0_1, refute_0_2])).
+
+cnf(refute_0_4, plain,
+    (less (neg(add(skoXC1, skoYC1)), add(skoXC1, skoYC1)) |
+     less_equal(0, add(skoXC1, skoYC1))),
+    inference(resolve, [], [refute_0_3, refute_0_0])).
+
+cnf(refute_0_5, plain,
+    (less (multiply(skoXC1, neg(1)), skoYC1) |
+     less_equal(multiply(skoXC1, neg(1)), skoYC1)),
+    inference(arithmetic, [], [refute_0_4])).
+
+cnf(refute_0_6, plain,
+    (less (add(skoXC1, skoYC1), 0) |
+     =(abs(add(skoXC1, skoYC1)), add(skoXC1, skoYC1))),
+    inference(subst, [], [abs_nonnegative])).
+
+cnf(refute_0_7, plain,
+    (less (add(skoXC1, skoYC1), add(skoXC1, skoYC1)) |
+     abs(add(skoXC1, skoYC1)) != add(skoXC1, skoYC1) |
+     less_equal(add(skoXC1, skoYC1), abs(add(skoXC1, skoYC1)))),
+    introduced(tautology, [equality])).
+
+cnf(refute_0_8, plain,
+    (less (add(skoXC1, skoYC1), 0) |
+     less (add(skoXC1, skoYC1), add(skoXC1, skoYC1)) |
+     less_equal(add(skoXC1, skoYC1), abs(add(skoXC1, skoYC1)))),
+    inference(resolve, [], [refute_0_6, refute_0_7])).
+
+cnf(refute_0_9, plain,
+    (less (add(skoXC1, skoYC1), 0) |
+     less (add(skoXC1, skoYC1), add(skoXC1, skoYC1))),
+    inference(resolve, [], [refute_0_8, refute_0_0])).
+
+cnf(refute_0_10, plain, (less (skoYC1, multiply(skoXC1, neg(1)))),
+    inference(arithmetic, [], [refute_0_9])).
+
+cnf(refute_0_11, plain,
+    (less_equal(multiply(skoXC1, neg(1)), skoYC1) |
+     less_equal(skoYC1, multiply(skoXC1, neg(1)))),
+    inference(decision, [], [refute_0_10])).
+
+cnf(refute_0_12, plain, (less_equal(multiply(skoXC1, neg(1)), skoYC1)),
+    inference(resolve, [], [refute_0_11, refute_0_5])).
+
+cnf(refute_0_13, plain, ($false),
+    inference(resolve, [], [refute_0_12, refute_0_10])).
+SZS output end CNFRefutation for ../../../verified-metitarski/problems/cristina-problem-3.tptp
+
+Processor time: 0.016 = 0.008 (Metis) + 0.008 (RCF)
+Maximum weight in proof search: 199

@@ -17,6 +17,32 @@ let
 
 
 
+    (*Remove the "strip" and "subgoal_0" step because they confuse the redirection algorithm. 
+      The clause derived by strip is not really part of the proof.*)
+
+    (*Remove the clause derived by strip*)
+    fun remove_strip accum [] = rev accum
+       |remove_strip accum ((step as (_, _, _, rule, _))::proof) =   
+            if rule = "strip" then remove_strip accum proof
+            else remove_strip (step::accum) proof
+
+    (*Clauses derived from subgoal_0 now derived from original goal*)
+    fun replace_from accum _ [] = rev accum
+       |replace_from accum name'' ((name, role, t, rule, from)::proof) = 
+            let val from' = map (fn (name',ls) => if name' = "subgoal_0" then (name'', ls) else (name',ls)) from
+            in replace_from ((name, role, t, rule, from')::accum) name'' proof
+            end
+    
+    val conjecture_name = (#1 (#1 (hd atp_proof)))
+                    handle Empty => raise Fail "The parsed atp_proof is empty."               
+
+    val atp_proof = 
+        atp_proof
+            |>remove_strip []
+            |>replace_from [] conjecture_name
+
+
+
    
     fun choose_type_enc strictness best_type_enc format =
       the_default best_type_enc
@@ -69,6 +95,7 @@ let
         termified_atp_proof
             |> map (fn (name, role, the_term, rule, from) => 
                         (name, role, (to_real_term the_term), rule, from) ) 
+
 
 
     val bot = #1 (List.last termified_atp_proof)
@@ -192,10 +219,11 @@ let
     val the_isar_proof = my_isar_proof [] assms direct_graph
     
 in
+    (*atp_proof*)
     (*termified_atp_proof*)
     (*string_of_refute_graph refute_graph*)
     (*string_of_direct_proof direct_graph*)
-    the_isar_proof
-    (*string_of_isar_proof @{context} 1 1 the_isar_proof*)
+    (*the_isar_proof*)
+    string_of_isar_proof @{context} 1 1 the_isar_proof
 end;
 
