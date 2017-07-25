@@ -32,14 +32,33 @@ let
             let val from' = map (fn (name',ls) => if name' = "subgoal_0" then (name'', ls) else (name',ls)) from
             in replace_from ((name, role, t, rule, from')::accum) name'' proof
             end
-    
+ 
     val conjecture_name = (#1 (#1 (hd atp_proof)))
                     handle Empty => raise Fail "The parsed atp_proof is empty."               
+
+   
+    (*Replace "1" with "Groups.one_class.one"*)
+    fun replace1_term (ATP_Problem.ATerm ((name, ls), args)) : (string, 'a) ATP_Problem.atp_term = 
+            if name = "1" then ATP_Problem.ATerm (("Groups.one_class.one", ls), map replace1_term args)
+            else ATP_Problem.ATerm ((name, ls), map replace1_term args)
+       |replace1_term (ATP_Problem.AAbs ((x, term), terms)) =
+            ATP_Problem.AAbs ((x, replace1_term term), map replace1_term terms)
+
+    fun replace1_formula (ATP_Problem.ATyQuant (quant, vars, formula)) =
+            ATP_Problem.ATyQuant (quant, vars, replace1_formula formula)
+       |replace1_formula (ATP_Problem.AQuant (quant, vars, formula)) = 
+            ATP_Problem.AQuant (quant, vars, replace1_formula formula)
+       |replace1_formula (ATP_Problem.AConn (conn, fs)) = 
+            ATP_Problem.AConn (conn, map replace1_formula fs)
+       |replace1_formula (ATP_Problem.AAtom term) = ATP_Problem.AAtom (replace1_term term)
+
 
     val atp_proof = 
         atp_proof
             |>remove_strip []
             |>replace_from [] conjecture_name
+            |> map (fn (name, role, formula, rule, from) => 
+                    (name, role, replace1_formula formula, rule, from))
 
 
 
@@ -56,6 +75,7 @@ let
                 |> Symtab.update_new ("subtract", "minus")
                 |> Symtab.update_new ("neg", "uminus")
                 |> Symtab.update_new ("less_equal", "less_eq")
+(*                |> Symtab.update_new ("1", "Groups.one_class.one")    *)
                 
 
     (*Termify atp_proof and factify*)
@@ -63,9 +83,9 @@ let
         atp_proof 
             |> termify_atp_proof 
                 @{context} 
-                "" (*name*)
-                ATP_Problem.CNF (*format*)
-                (choose_type_enc ATP_Problem_Generate.Non_Strict "mono_native" (*from ATP_Problem_Generate.type_enc_of_string*) ATP_Problem.CNF NONE (*?*)) (*type encoding*)
+                "" (*local prover name*)
+                ATP_Problem.FOF (*format*)
+                (choose_type_enc ATP_Problem_Generate.Strict "mono_native" (*from ATP_Problem_Generate.type_enc_of_string*) ATP_Problem.FOF NONE (*?*)) (*type encoding*)
                 pool (*Symtab.empty ? pool*)
                 [] (*? lifted*) 
                 Symtab.empty (*? sym_tab*)
@@ -91,10 +111,19 @@ let
         |to_real_term (t1 $ t2) = ((to_real_term t1) $ (to_real_term t2))
 
 
+    (*Change terms 1 from Free to Const*)
+(*    fun to_const (Free (name, ty)) = 
+        if name = "one" then Const (name, ty)
+        else Free (name, ty)
+       |to_const (Abs (x, ty, t1)) = Abs (x, ty, to_const t1)
+       |to_const (t1 $ t2) = (to_const t1) $ (to_const t2)
+       |to_const x = x
+*)
     val termified_atp_proof =
         termified_atp_proof
             |> map (fn (name, role, the_term, rule, from) => 
-                        (name, role, (to_real_term the_term), rule, from) ) 
+                        (name, role, (to_real_term the_term) (*|> to_const*), rule, from) ) 
+
 
 
 
@@ -202,7 +231,7 @@ let
                 val skolems = []
             in
                 my_isar_steps false ((Prove(show_then_have, skolems, label, prop, [], 
-                   (deps gamma) (*gamma - assumptions*), [Metis_Method (NONE, NONE)],"")) :: accum) infs
+                   (deps gamma) (*gamma - assumptions*), [Auto_Method, Metis_Method (NONE, NONE)],"")) :: accum) infs
             end
 
        |my_isar_steps outer accum (_ :: infs) = my_isar_steps outer accum infs  (*Not treating the "Cases" case for now*)
@@ -220,10 +249,10 @@ let
     
 in
     (*atp_proof*)
-    (*termified_atp_proof*)
+    termified_atp_proof
     (*string_of_refute_graph refute_graph*)
     (*string_of_direct_proof direct_graph*)
     (*the_isar_proof*)
-    string_of_isar_proof @{context} 1 1 the_isar_proof
+    (*string_of_isar_proof @{context} 1 1 the_isar_proof*)
 end;
 
