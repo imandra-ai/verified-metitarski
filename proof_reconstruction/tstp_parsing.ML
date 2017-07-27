@@ -13,7 +13,7 @@ open Sledgehammer_Proof_Methods;
 let 
     (*Parse the tstp string into the atp_proof datatype. The first argument, "problem", is not really needed.*)
     val atp_proof = ATP_Satallax.atp_proof_of_tstplike_proof "1" [("2", [ATP_Problem.Class_Decl("3", "4", [])])] 
-                        (TSTP_Input.read "Documents/internship/verified-metitarski/problems/cristina-problem-6.tstpout")
+                        (TSTP_Input.read "Documents/internship/verified-metitarski/problems/cristina-problem-2.tstpout")
 
 
 
@@ -70,11 +70,11 @@ let
 
     (*Translate some of the tstp prefix operations to Isabelle*)
     val pool = Symtab.empty
-                |> Symtab.update_new ("multiply", "c_Groups.times_class.times")     (*t_ for type comstant *)
-                |> Symtab.update_new ("add", "c_Groups.plus_class.plus")
-                |> Symtab.update_new ("subtract", "c_Groups.minus_class.minus")
-                |> Symtab.update_new ("neg", "c_Groups.uminus_class.uminus")
-                |> Symtab.update_new ("less_equal", "c_Orderings.ord_class.less_eq")
+                |> Symtab.update_new ("multiply", "times" (*"c_Groups.times_class.times"*))     (*t_ for type comstant *)
+                |> Symtab.update_new ("add", "plus" (*"c_Groups.plus_class.plus"*))
+                |> Symtab.update_new ("subtract", "minus" (*"c_Groups.minus_class.minus"*))
+                |> Symtab.update_new ("neg", "uminus" (*"c_Groups.uminus_class.uminus"*))
+                |> Symtab.update_new ("less_equal", "less_eq" (*"c_Orderings.ord_class.less_eq"*))
                 |> Symtab.update_new ("0", "c_Groups.zero_class.zero")
                 |> Symtab.update_new ("1", "c_Groups.one_class.one")    (*c_ prefix from ATP_Proof_Reconstruct.do_term*)                
 (*                |> Symtab.update_new ("2", "c_Groups.two_class.two")  *)
