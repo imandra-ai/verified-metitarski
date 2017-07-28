@@ -14,11 +14,7 @@ end
 \<close>  
 *)  
 
-lemma my_lemma: "\<forall>X::real. less_eq 0 (times (minus X 1::real) (minus X 1))"
-  sorry
-    
-print_theory    
-  
+lemma my_lemma: "\<forall>X::real. less_eq 0 (times (minus X 1::real) (minus X 1))"  
 proof -
   have refute_0_10: "\<not> less (1::real) (times (skoXC1::real) (plus (2::real) (times skoXC1 (uminus 1::real)::real)))"
     by (*metis*) sos

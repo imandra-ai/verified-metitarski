@@ -32,10 +32,10 @@ let
     fun ord_info () = ATP_Problem_Generate.atp_problem_term_order_info atp_problem
 in
   atp_problem
-  |> ATP_Problem.lines_of_atp_problem ATP_Problem.FOF (*format*) 
+(*  |> ATP_Problem.lines_of_atp_problem ATP_Problem.FOF (*format*) 
                                       (ATP_Systems.effective_term_order @{context} ATP_Proof.eN (*name of prover to send problem to*)) (*ord*) 
                                       ord_info
 (*  |> cons ("% " ^ command ^ "\n" ^ (if comment = "" then "" else "% " ^ comment ^ "\n"))  *)
   |> File.write_list (Path.append (Path.explode "/home/cristina/Documents/internship/verified-metitarski/proof_reconstruction") (Path.basic "problem-6.txt")) (*"/home/cristina/Documents/internship/verified-metitarski/proof_reconstruction/problem-6.txt"*)   (*prob_path*)
-
+*)
 end

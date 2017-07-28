@@ -1,5 +1,5 @@
 theory Isar
-  imports Main Real CristinaProblem6
+  imports Main Real
 begin
 
 declare[[ML_print_depth=50]]  
