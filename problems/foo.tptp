@@ -1,0 +1,1 @@
+fof(Conjecture,conjecture, ![X] : (![Y] : (?[Z] : (~(Z = ln((53 / 10))) => (((abs(X) - 1) * (X - 1)) < 0))))).
