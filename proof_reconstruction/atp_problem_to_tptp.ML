@@ -9,11 +9,15 @@ struct
 (*Function symbols that need to be translated to tptp. Need to add more*)
 val plus = "Groups.plus_class.plus"
 val minus = "Groups.minus_class.minus"
+val uminus = "Groups.uminus_class.uminus"
 val times = "Groups.times_class.times"
 val divide = "Rings.divide_class.divide"
 val power = "Power.power_class.power"
 
-(*Greater than is an abbreviation of less than in Isabelle*)
+(*Greater than is an abbreviation of less than in Isabelle.
+  Not_eq (!=) is an abbreviation of Not and Eq. 
+  Will need to translate them from tptp to Isabelle.
+  Also, lgen*)
 val less = "Orderings.ord_class.less"
 val less_eq = "Orderings.ord_class.less_eq"
 val eq = "HOL.eq"
@@ -21,15 +25,27 @@ val eq = "HOL.eq"
 val abs = "Groups.abs_class.abs"
 val sqrt = "NthRoot.sqrt"
 val ln = "Transcendental.ln_class.ln"
+val arcsin = "Transcendental.arcsin"
+val arccos = "Transcendental.arccos"
+val arctan = "Transcendental.arctan"
+val exp = "Transcendental.exp"
+val cos = "Transcendental.cos"
+val sin = "Transcendental.sin"
+val tan = "Transcendental.tan"
+
+val max = "Orderings.ord_class.max"
+val min = "Orderings.ord_class.min"
 
 val zero = "Groups.zero_class.zero"
 val one = "Groups.one_class.one"
+val pi = "Transcendental.pi"
 
-datatype name_type = Infix | Prefix | NoArgs
+datatype name_type = Infix | Prefix | Unary | NoArgs
 
 val name_table = Symtab.empty
   |> Symtab.update_new (plus, (Infix, "+"))
   |> Symtab.update_new (minus, (Infix, "-"))
+  |> Symtab.update_new (uminus, (Unary, "-"))
   |> Symtab.update_new (times, (Infix, "*"))
   |> Symtab.update_new (divide, (Infix, "/"))
   |> Symtab.update_new (power, (Infix, "^"))
@@ -41,12 +57,23 @@ val name_table = Symtab.empty
   |> Symtab.update_new (abs, (Prefix, "abs"))
   |> Symtab.update_new (sqrt, (Prefix, "sqrt"))
   |> Symtab.update_new (ln, (Prefix, "ln"))
+  |> Symtab.update_new (arcsin, (Prefix, "arcsin"))
+  |> Symtab.update_new (arccos, (Prefix, "arccos"))
+  |> Symtab.update_new (arctan, (Prefix, "arctan"))
+  |> Symtab.update_new (exp, (Prefix, "exp"))
+  |> Symtab.update_new (cos, (Prefix, "cos"))
+  |> Symtab.update_new (sin, (Prefix, "sin"))
+  |> Symtab.update_new (tan, (Prefix, "tan"))
+
+  |> Symtab.update_new (max, (Prefix, "max"))
+  |> Symtab.update_new (min, (Prefix, "min"))
 
   |> Symtab.update_new (zero, (NoArgs, "0"))
   |> Symtab.update_new (one, (NoArgs, "1"))
+  |> Symtab.update_new (pi, (NoArgs, "pi"))
 
 
-fun atp_number_to_int atp_term =
+fun atp_number_to_int (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) : int =
   (case atp_term of
     ATP_Problem.ATerm (("Num.num.One", _), []) => 1
   | ATP_Problem.ATerm (("Num.num.Bit0", _), [arg]) =>
@@ -61,14 +88,31 @@ fun atp_number_to_int atp_term =
       in
         1 + m + m
       end
-  | _ => error "Malformed atp number"
+  | ATP_Problem.ATerm ((name, _), _) => error ("Not an atp number " ^ name)
+  | _ => error "Not an atp_term ATerm"
   )
 
-fun atp_term_to_tptp atp_term = 
+fun atp_numeral_to_int (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term)
+    : string =
+    (case atp_term of
+      ATP_Problem.ATerm (("Num.numeral_class.numeral", _), [arg]) =>
+        string_of_int (atp_number_to_int arg)   
+    | _ => error "Not an atp numeral"
+    )
+
+fun atp_term_to_tptp (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) : string = 
   (case atp_term of
+    (*Translating the nth root.*)
+    ATP_Problem.ATerm (("NthRoot.root", _), [arg1, arg2]) =>
+      (*Fix: name of tptp root functions shouldn't be hardcoded here*)
+      (case atp_numeral_to_int arg1 of
+        "3" => "cbrt(" ^ (atp_term_to_tptp arg2) ^ ")"
+      | n => "nthrt(" ^ n ^ ", " ^ (atp_term_to_tptp arg2) ^ ")"
+      )
+
     (*Translating natural numbers. Rational numbers are translated as fractions*)
-    ATP_Problem.ATerm (("Num.numeral_class.numeral", _), [arg]) =>
-      string_of_int (atp_number_to_int arg)
+  | ATP_Problem.ATerm (("Num.numeral_class.numeral", _), [_]) =>
+      atp_numeral_to_int atp_term     
 
   | ATP_Problem.ATerm ((name, _), []) => 
       (case Symtab.lookup name_table name of
@@ -78,12 +122,13 @@ fun atp_term_to_tptp atp_term =
       )
   | ATP_Problem.ATerm ((name, _), arg1::args) =>
       (case Symtab.lookup name_table name of
-        NONE => error "Tptp name of " ^ name ^ " operator unknown"
+        NONE => error ("Unknown tptp name for " ^ name ^ " operator")
       | SOME (Infix, tptp_name) =>
           (case args of
-            (*Enclose all infix operators in parantheses to ensure correct precedence*)
+            (*Enclose all infix operators in parantheses to ensure correct precedence. 
+              Metitarski doesn't like parantheses around multiplications and less/greater in CNF*)
             [arg2] => "(" ^ (atp_term_to_tptp arg1) ^ " " ^ tptp_name ^ " " ^ (atp_term_to_tptp arg2) ^ ")"
-          | _ => error "Infix operator " ^ name ^ " has incorrect number of argments"
+          | _ => error ("Infix operator " ^ name ^ " has incorrect number of argments")
           )
       | SOME (Prefix, tptp_name) =>
           let
@@ -91,12 +136,20 @@ fun atp_term_to_tptp atp_term =
           in
             tptp_name ^ "(" ^ (atp_term_to_tptp arg1) ^ (String.concat (List.map to_tptp_arg args))  ^ ")"
           end
-      | _ => error "Operator " ^ name ^ " has arguments but the name_type is NoArgs."
+      | SOME (Unary, tptp_name) =>
+          (case args of
+            [] => "(" ^ tptp_name ^ (atp_term_to_tptp arg1) ^ ")"
+          | _ => error ("Unary operator " ^ tptp_name ^ " has incorrect number of arguments.")
+          )
+      | _ => error ("Operator " ^ name ^ " has arguments but the name_type is NoArgs.")
       )
   | _ => error "Malformed atp_term"
   )
 
-fun atp_formula_to_tptp atp_formula = 
+fun atp_formula_to_tptp (atp_formula 
+  : (string, string ATP_Problem.atp_type, 
+     (string, string ATP_Problem.atp_type) ATP_Problem.atp_term, string) ATP_Problem.atp_formula)
+  : string = 
   (case atp_formula of
     ATP_Problem.AQuant (ATP_Problem.AForall, [(var, _)], phi) =>
       "![" ^ var ^ "] : (" ^ (atp_formula_to_tptp phi) ^ ")"
@@ -118,7 +171,8 @@ fun atp_formula_to_tptp atp_formula =
   | _ => error "Malformed atp formula"
   )
 
-fun atp_problem_to_tptp (atp_problem : (string * string ATP_Problem.atp_problem_line list) list) =
+fun atp_problem_to_tptp (atp_problem : (string * string ATP_Problem.atp_problem_line list) list) 
+    : string =
   let
     val atp_formula = 
       case

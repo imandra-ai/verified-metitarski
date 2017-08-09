@@ -6,11 +6,12 @@ end;
 structure ATP_Problem_of_thm : ATP_PROBLEM_OF_THM =
 struct
 
-fun atp_problem_of_thm ctxt thm =
+fun atp_problem_of_thm ctxt (thm : Thm.thm) : string ATP_Problem.atp_problem =
   let
-    fun atp_term_of_term ctxt args t =
+    fun atp_term_of_term (ctxt : Proof.context) (args : Term.term list) (t : Term.term) 
+          : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term =
       let
-        fun atp_type_of_type ctxt ty =
+        fun atp_type_of_type (ctxt : Proof.context) (ty : Term.typ) =
           (case ty of
             Type ("fun", [t1, t2]) => ATP_Problem.AFun (atp_type_of_type ctxt t1, atp_type_of_type ctxt t2)
           | Type (name, ls) => ATP_Problem.AType ((name, []), map (atp_type_of_type ctxt) ls)
@@ -38,7 +39,9 @@ fun atp_problem_of_thm ctxt thm =
       end  
 
     (*Numbers greater than 1 are application terms*)
-    fun atp_formula_of_term ctxt t =
+    fun atp_formula_of_term (ctxt : Proof.context) (t : Term.term) 
+        : (string, string ATP_Problem.atp_type, 
+          (string, string ATP_Problem.atp_type) ATP_Problem.atp_term, string) ATP_Problem.atp_formula =
       (case t of
         t1 $ t2 $ t3 =>
           (case t1 of
@@ -72,9 +75,12 @@ fun atp_problem_of_thm ctxt thm =
       )
 
 
-    fun fix_bound_vars bound_vars atp_formula = 
+    fun fix_bound_vars (bound_vars : string list) (atp_formula
+      : (string, string ATP_Problem.atp_type, 
+        (string, string ATP_Problem.atp_type) ATP_Problem.atp_term, string) ATP_Problem.atp_formula) = 
       let 
-        fun replace_bound_vars bound_vars atp_term = 
+        fun replace_bound_vars (bound_vars : string list) 
+              (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) = 
           (case atp_term of 
             ATP_Problem.ATerm ((name, ty), args) => 
               if String.isPrefix "bound." name then 
