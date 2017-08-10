@@ -1,6 +1,6 @@
 %fof(Conjecture,conjecture, ![X] : (![Y] : (?[Z] : (~(Z = tan((53 / 10))) => (((abs(X) - 1) * (X - 1)) < pi))))).
 
 %Raises an error
-fof(Conjecture,conjecture, ![X] : (![Y] : (?[Z] : (~-Z = ln(53 / 10) => (abs(X) - 1) * (X - 1) < 0)))).
+fof(Conjecture,conjecture, ![X, Y]  : (![Z] : (~-Z = ln(53 / 10) => (abs(X) - 1) * (X - 1) < 0))).
 
 %cnf(Conjecture,conjecture, (~((-Z) = ln((53 / 10))) | (abs(X) - 1) * (X - 1) > 0)).

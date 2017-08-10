@@ -5,7 +5,7 @@ begin
 declare[[ML_print_depth=50]]   
   
 (*For the cube root use "root 3"*)  
-lemma foo: "\<forall>X Y::real .\<exists> Z::real. Z \<noteq> (tan 5.3) \<longrightarrow> greater pi (times ( minus (abs X) 1::real) (minus X 1))"  
+lemma foo: "\<forall>X Y::real .\<forall> Z::real. Z \<noteq> (tan 5.3) \<longrightarrow> greater pi (times ( minus (abs X) 1::real) (minus X 1))"  
 (*apply(atomize)*)
   sorry
  

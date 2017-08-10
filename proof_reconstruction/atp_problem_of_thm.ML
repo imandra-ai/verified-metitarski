@@ -61,10 +61,12 @@ fun atp_problem_of_thm ctxt (thm : Thm.thm) : string ATP_Problem.atp_problem =
               |  _ => error ("Error in:" ^ Syntax.string_of_term ctxt t)
               )
           | (Const ("HOL.Ex", _)) =>
-              (case t2 of 
+              error "Existential quantifiers are not allowed in Metitarski problems"
+(*            (case t2 of 
                 (Abs (var, _, t3)) =>  ATP_Problem.AQuant (ATP_Problem.AExists, [(var, SOME (ATP_Problem.AType (("Real.real", []), [])))], atp_formula_of_term ctxt t3)
-              |  _ => error ("Error in:" ^ Syntax.string_of_term ctxt t)
+              |  _ => error ("Error in:" ^ Syntax.string_of_term ctxt t)             
               )
+*)
 
           | (Const ("HOL.Not", _)) => ATP_Problem.AConn (ATP_Problem.ANot, [atp_formula_of_term ctxt t2])
 
