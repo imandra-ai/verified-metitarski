@@ -20,7 +20,7 @@ ML_file "~/Documents/internship/verified-metitarski/proof_reconstruction/mt_call
   
 (*Create ATP_Problem from a theorem*)  
 ML\<open>
-val atp_problem = ATP_Problem_of_thm.atp_problem_of_thm @{context} @{thm foo};                                                                    
+val atp_problem = Thm_to_ATP_Problem.thm_to_atp_problem @{context} @{thm foo};                                                                    
 \<close>
   
 (*Create tptp string with the problem*)  
@@ -69,9 +69,13 @@ val atp_proof =
 \<close>
 
 ML\<open>
+fun atp_term_to_term (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) 
+  : term =
+
 fun atp_formula_to_term (atp_formula 
   : (string, string ATP_Problem.atp_type, 
-     (string, string ATP_Problem.atp_type) ATP_Problem.atp_term, string) ATP_Problem.atp_formula) =
+     (string, string ATP_Problem.atp_type) ATP_Problem.atp_term, string) ATP_Problem.atp_formula)
+  : term =
   (case atp_formula of
     ATP_Problem.AQuant (quantifier, [(var, _)], phi) =>
       let
