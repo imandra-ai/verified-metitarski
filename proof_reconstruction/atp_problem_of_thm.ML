@@ -121,6 +121,7 @@ fun atp_problem_of_thm ctxt (thm : Thm.thm) : string ATP_Problem.atp_problem =
 
     val formula = fix_bound_vars [] (atp_formula_of_term ctxt (Envir.beta_norm (Thm.concl_of thm)))
   in
+    (*Calling all problems "Conjecture" for now*)
     [("Conjecture" ,[ATP_Problem.Formula (("conjecture", ""), ATP_Problem.Conjecture, formula, NONE, [])])]
   end;
 
