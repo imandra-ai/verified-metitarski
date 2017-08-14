@@ -13,19 +13,23 @@ struct
 fun tptp_proof_to_atp_proof (atp_problem : string ATP_Problem.atp_problem) (tptp_proof : string) 
   : string ATP_Proof.atp_proof =
   let
-    (*Remove axioms*)
+
+    (*Remove cnf axioms*)
     val trimmed_tptp_proof : string = 
-      Substring.position "fof" (CharVectorSlice.full tptp_proof)
-        |> #2
-        |> CharVectorSlice.vector;
+      if String.isSubstring "GaveUp" tptp_proof 
+      then error "Metitarski gave up."  (*To deal with a failed proof*)
+      else Substring.position "fof" (CharVectorSlice.full tptp_proof)
+            |> #2
+            |> CharVectorSlice.vector;
     
     (*Use translation from Isabelle/src/HOL/Tools/ATP*)
     val atp_proof = ATP_Satallax.atp_proof_of_tstplike_proof "1" atp_problem trimmed_tptp_proof
     
-    (*Remove the clause derived by strip=subgoal_0*)
+    (*Remove the clause derived by strip=subgoal_0 and the Axioms*)
     fun remove_strip accum [] = rev accum
-       |remove_strip accum ((step as (_, _, _, rule, _))::proof) =   
-            if rule = "strip" then remove_strip accum proof
+       |remove_strip accum ((step as (_, role, _, rule, _))::proof) =   
+            if rule = "strip" orelse role = ATP_Problem.Axiom 
+            then remove_strip accum proof
             else remove_strip (step::accum) proof
     
     (*Clauses derived from subgoal_0 now derived from original goal*)

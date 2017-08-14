@@ -6,7 +6,7 @@ declare[[ML_print_depth=50]]
   
 (*For the cube root use "root 3"*)
 (*^ only allows natural numbers powers. Does MT allow any powe?*)  
-lemma foo: "\<forall>X::real.(0 = X/2 \<longrightarrow> 0 <= X) "  
+lemma foo: "\<forall>(X::real) (Y::real).\<forall> (Z::real).(\<not>(pi = min Z X) \<longrightarrow> 0 <= Y^2) "  
 (*apply(atomize)*)
   sorry
 
@@ -55,6 +55,7 @@ val tptp_proof = Call_Metitarski.call_mt mt_path tptp_problem
 (*Read the tptp proof into an ATP_Proof*)  
 ML\<open>
 val atp_proof = TPTP_Proof_to_atp_proof.tptp_proof_to_atp_proof atp_problem tptp_proof
+(*Need to deal with the case MT gives up*)
 \<close>
 
 ML\<open>
@@ -71,16 +72,74 @@ val tptp_prefix_name_to_isabelle =
     |> Symtab.update_new ("divide", (ATP_Problem_to_tptp.divide, @{typ "real\<Rightarrow>real\<Rightarrow>real"}))
     |> Symtab.update_new ("power", (ATP_Problem_to_tptp.power, @{typ "real\<Rightarrow>nat\<Rightarrow>real"}))
 
+    (*Greater, greater than: MT always replaces these with less*)
+    (*not_eq translated to not and eq by ATP_Satallax.atp_proof_of_tstplike_proof*)
     |> Symtab.update_new ("less", (ATP_Problem_to_tptp.less, @{typ "real\<Rightarrow>real\<Rightarrow>bool"}))
     |> Symtab.update_new ("less_equal", (ATP_Problem_to_tptp.less_eq, @{typ "real\<Rightarrow>real\<Rightarrow>bool"}))
-
+    |> Symtab.update_new ("equal", (ATP_Problem_to_tptp.eq, @{typ "real\<Rightarrow>real\<Rightarrow>bool"}))
     
+    |> Symtab.update_new ("abs", (ATP_Problem_to_tptp.abs, @{typ "real\<Rightarrow>real"}))
+    |> Symtab.update_new ("sqrt", (ATP_Problem_to_tptp.sqrt, @{typ "real\<Rightarrow>real"}))
+    |> Symtab.update_new ("ln", (ATP_Problem_to_tptp.ln, @{typ "real\<Rightarrow>real"}))
+    |> Symtab.update_new ("arcsin", (ATP_Problem_to_tptp.arcsin, @{typ "real\<Rightarrow>real"}))
+    |> Symtab.update_new ("arccos", (ATP_Problem_to_tptp.arccos, @{typ "real\<Rightarrow>real"}))
+    |> Symtab.update_new ("arctan", (ATP_Problem_to_tptp.arctan, @{typ "real\<Rightarrow>real"}))
  
+    |> Symtab.update_new ("exp", (ATP_Problem_to_tptp.exp, @{typ "real\<Rightarrow>real"}))
+    |> Symtab.update_new ("cos", (ATP_Problem_to_tptp.cos, @{typ "real\<Rightarrow>real"}))
+    |> Symtab.update_new ("sin", (ATP_Problem_to_tptp.sin, @{typ "real\<Rightarrow>real"}))
+    |> Symtab.update_new ("tan", (ATP_Problem_to_tptp.tan, @{typ "real\<Rightarrow>real"}))
 
+    |> Symtab.update_new ("max", (ATP_Problem_to_tptp.max, @{typ "real\<Rightarrow>real\<Rightarrow>real"}))
+    |> Symtab.update_new ("min", (ATP_Problem_to_tptp.min, @{typ "real\<Rightarrow>real\<Rightarrow>real"}))
+
+    |> Symtab.update_new ("0", (ATP_Problem_to_tptp.zero, @{typ "real"}))
+    |> Symtab.update_new ("1", (ATP_Problem_to_tptp.one, @{typ "real"}))
+    |> Symtab.update_new ("pi", (ATP_Problem_to_tptp.pi, @{typ "real"}))
+ 
     (*Not supported in atp_problem_to_tptp*)
     |> Symtab.update_new ("$false", ("HOL.False", @{typ "bool"}))
+
+fun fix_bound_vars_atp_term (var_list : string list)
+                            (atp_term 
+  : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) = 
+  let
+    fun get_index list element acc =
+      (case list of
+        [] => NONE
+      | l::ls => if l=element then SOME acc
+                 else get_index ls element (acc+1)
+      ) 
+  in
+    (case atp_term of
+      ATP_Problem.ATerm ((name, ty), []) =>
+        (case get_index var_list name 0 of
+          NONE => atp_term
+        | SOME index => ATP_Problem.ATerm (("bound." ^ (string_of_int index), ty), [])
+        ) 
+    | ATP_Problem.ATerm ((name, ty), args) =>
+        ATP_Problem.ATerm ((name, ty), List.map (fix_bound_vars_atp_term var_list) args)
+
+    (*Not supporting the AAbs atp_term*)
+    | _ => error "Invalid atp_term in atp_proof."
+    )
+  end
+
+fun fix_bound_vars_atp_formula (var_list : string list)
+                               (atp_formula 
+  : (string, string, (string, string ATP_Problem.atp_type) ATP_Problem.atp_term, 
+     string) ATP_Problem.atp_formula) =
+
+  (case atp_formula of
+    ATP_Problem.AQuant (quantifier, binder_list, phi) =>
+      ATP_Problem.AQuant (quantifier, binder_list, 
+        (fix_bound_vars_atp_formula (List.foldl (fn ((var, _), var_list) => var::var_list) var_list binder_list) phi))
+  | ATP_Problem.AConn (conn, phis) =>
+      ATP_Problem.AConn (conn, List.map (fix_bound_vars_atp_formula var_list) phis)
+  | ATP_Problem.AAtom atp_term => ATP_Problem.AAtom (fix_bound_vars_atp_term var_list atp_term)
+  | _ => error "Invalid atp_formula in atp_proof."
+  )
   
-(*TODO: Support all the other operators*)
 (*TODO: Translate numbers. Power requires a nat argmumet!*)
 (*TODO: Transform bound variables to Bound*)
 (*TODO: Fix types of Free variables*)
@@ -90,7 +149,17 @@ fun atp_term_to_term (atp_term : (string, string ATP_Problem.atp_type) ATP_Probl
     ATP_Problem.ATerm ((name, _), args) =>
       (case Symtab.lookup tptp_prefix_name_to_isabelle name of
         (*For now interpret all variables as free. Fix with an extra function!*)
-        NONE => if args=[] then Free (name, @{typ 'a})
+        NONE => if args=[] then 
+                  if String.isPrefix "bound." name
+                  then 
+                    let val index = String.extract (name, (String.size "bound."), NONE)
+                    in
+                      (case Int.fromString index of
+                        SOME i => Bound i
+                      | NONE => error ("Invalid bound variable index: " ^ index)
+                      )
+                    end
+                  else Free (name, @{typ 'a})
                 else error ("Unsupported tptp operator: " ^ name)
       | SOME (isa_name, ty) => 
           let 
@@ -111,7 +180,8 @@ fun atp_formula_to_term (atp_formula
      (string, string ATP_Problem.atp_type) ATP_Problem.atp_term, string) ATP_Problem.atp_formula)
   : term =
   (case atp_formula of
-    ATP_Problem.AQuant (quantifier, [(var, _)], phi) =>
+    (*Need to handle multiple variables being quantified over simultaneously*)
+    ATP_Problem.AQuant (quantifier, binder_list, phi) =>
       let
         val quant_string =
           (case quantifier of
@@ -119,8 +189,10 @@ fun atp_formula_to_term (atp_formula
           | ATP_Problem.AExists => "HOL.Ex"
           )
       in
-        (Const (quant_string, @{typ  "(real \<Rightarrow> bool) \<Rightarrow> bool"}) $
-         Abs (var, @{typ "real"}, (atp_formula_to_term phi)))
+        List.foldr 
+          (fn ((var, _), term) => (Const (quant_string, @{typ  "(real \<Rightarrow> bool) \<Rightarrow> bool"}) $ Abs (var, @{typ "real"}, term))) 
+          (atp_formula_to_term phi) 
+          binder_list
       end
 
   | ATP_Problem.AConn (conn, [phi1, phi2]) =>
@@ -156,7 +228,7 @@ fun termify_atp_proof (atp_proof : string ATP_Proof.atp_proof)
   : (term, string) ATP_Proof.atp_step list=
   let 
     fun termify_atp_proof_line (name, role, phi, rule, from) =
-      (name, role, wrap_term (atp_formula_to_term phi), rule, from)
+      (name, role, wrap_term (atp_formula_to_term (fix_bound_vars_atp_formula [] phi)), rule, from)
   in
     List.map termify_atp_proof_line atp_proof
   end;

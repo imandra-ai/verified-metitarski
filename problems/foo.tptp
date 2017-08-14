@@ -1,4 +1,4 @@
-fof(Conjecture,conjecture, ![X] : ((0 = (X / 2)) => (0 <= X))).
+fof(Conjecture,conjecture, ![X] : (~(pi = min(X,4 )) => (0 <= (X ^ 2)))).
 
 %fof(Conjecture,conjecture, ![X] : (![Y] : (?[Z] : (~(Z = tan((53 / 10))) => (((abs(X) - 1) * (X - 1)) < pi))))).
 
