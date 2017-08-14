@@ -42,7 +42,7 @@ val pi = "Transcendental.pi"
 
 datatype name_type = Infix | Prefix | Unary | NoArgs
 
-val name_table = Symtab.empty
+val isabelle_to_infix_tptp_name = Symtab.empty
   |> Symtab.update_new (plus, (Infix, "+"))
   |> Symtab.update_new (minus, (Infix, "-"))
   |> Symtab.update_new (uminus, (Unary, "-"))
@@ -115,13 +115,13 @@ fun atp_term_to_tptp (atp_term : (string, string ATP_Problem.atp_type) ATP_Probl
       atp_numeral_to_int atp_term     
 
   | ATP_Problem.ATerm ((name, _), []) => 
-      (case Symtab.lookup name_table name of
+      (case Symtab.lookup isabelle_to_infix_tptp_name name of
         NONE => name
       | SOME (NoArgs, tptp_name) => tptp_name
       | _ => error "Atp_term doesn't have any argumets but name_type is not NoArgs"
       )
   | ATP_Problem.ATerm ((name, _), arg1::args) =>
-      (case Symtab.lookup name_table name of
+      (case Symtab.lookup isabelle_to_infix_tptp_name name of
         NONE => error ("Unknown tptp name for " ^ name ^ " operator")
       | SOME (Infix, tptp_name) =>
           (case args of

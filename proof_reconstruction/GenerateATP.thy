@@ -8,14 +8,21 @@ declare[[ML_print_depth=50]]
 lemma foo: "\<forall>X::real.(0 \<le> X \<longrightarrow> 0 <= X^2) "  
 (*apply(atomize)*)
   sorry
- 
+
+lemma foo_metalevel: "0\<le>(X::real) \<Longrightarrow> 0\<le> X^2"
+  sorry
+ML\<open>
+Thm.prems_of @{thm foo_metalevel}
+\<close>    
+  
 ML\<open>
 val theorem = Thm.concl_of @{thm foo};
 \<close>  
 
-ML_file "~/Documents/internship/verified-metitarski/proof_reconstruction/atp_problem_of_thm.ML"  
+ML_file "~/Documents/internship/verified-metitarski/proof_reconstruction/thm_to_atp_problem.ML"  
 ML_file "~/Documents/internship/verified-metitarski/proof_reconstruction/atp_problem_to_tptp.ML"
 ML_file "~/Documents/internship/verified-metitarski/proof_reconstruction/mt_call.ML"
+ML_file "~/Documents/internship/verified-metitarski/proof_reconstruction/tptp_proof_to_atp_proof.ML"  
   
   
 (*Create ATP_Problem from a theorem*)  
@@ -38,40 +45,31 @@ val tptp_proof = Call_Metitarski.call_mt mt_path tptp_problem
 
 (*Read the tptp proof into an ATP_Proof*)  
 ML\<open>
-(*Remove axioms*)
-val trimmed_tptp_proof : string = 
-  Substring.position "fof" (CharVectorSlice.full tptp_proof)
-    |> #2
-    |> CharVectorSlice.vector;
-
-val atp_proof = ATP_Satallax.atp_proof_of_tstplike_proof "1" atp_problem trimmed_tptp_proof
-
-(*Remove the clause derived by strip=subgoal_0*)
-fun remove_strip accum [] = rev accum
-   |remove_strip accum ((step as (_, _, _, rule, _))::proof) =   
-        if rule = "strip" then remove_strip accum proof
-        else remove_strip (step::accum) proof
-
-(*Clauses derived from subgoal_0 now derived from original goal*)
-fun replace_from accum _ [] = rev accum
-   |replace_from accum name'' ((name, role, t, rule, from)::proof) = 
-        let val from' = map (fn (name',ls) => if name' = "subgoal_0" then (name'', ls) else (name',ls)) from
-        in replace_from ((name, role, t, rule, from')::accum) name'' proof
-        end
-
-val conjecture_name = (#1 (#1 (hd atp_proof)))
-                handle Empty => raise Fail "The parsed atp_proof is empty." 
-
-val atp_proof = 
-    atp_proof
-        |>remove_strip []
-        |>replace_from [] conjecture_name
+val atp_proof = TPTP_Proof_to_atp_proof.tptp_proof_to_atp_proof atp_problem tptp_proof
 \<close>
 
 ML\<open>
+open Symtab
+\<close>  
+  
+ML\<open>
+val tptp_prefix_name_to_isabelle = 
+  Symtab.empty
+    |> Symtab.update_new ()
+     
+
 fun atp_term_to_term (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) 
   : term =
+  (case atp_term of
+    ATP_Problem.ATerm ((name, _), args) =>
+      let
+        val isa_name = Symtab.lookup tptp_prefix_name_to_isabelle name
+      in
+        
+      end
+  )
 
+(*Need to wrap formula in HOL.Trueprop*)
 fun atp_formula_to_term (atp_formula 
   : (string, string ATP_Problem.atp_type, 
      (string, string ATP_Problem.atp_type) ATP_Problem.atp_term, string) ATP_Problem.atp_formula)
