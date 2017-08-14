@@ -1,6 +1,36 @@
 signature ATP_PROBLEM_TO_TPTP =
 sig
   val atp_problem_to_tptp : string ATP_Problem.atp_problem -> string
+
+  val plus : string
+  val minus : string
+  val uminus : string
+  val times : string
+  val divide : string
+  val power : string
+  
+  val less : string
+  val less_eq : string
+  val eq : string
+  
+  val abs : string
+  val sqrt : string
+  val ln : string
+  val arcsin : string
+  val arccos : string
+  val arctan : string
+  val exp : string
+  val cos : string
+  val sin : string
+  val tan : string
+  
+  val max : string
+  val min : string
+  
+  val zero : string
+  val one : string
+  val pi : string
+
 end;
 
 structure ATP_Problem_to_tptp : ATP_PROBLEM_TO_TPTP =
