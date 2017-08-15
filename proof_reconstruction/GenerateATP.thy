@@ -5,8 +5,8 @@ begin
 declare[[ML_print_depth=50]]   
   
 (*For the cube root use "root 3"*)
-(*^ only allows natural numbers powers. Does MT allow any powe?*)  
-lemma foo: "\<forall>(X::real) (Y::real).\<forall> (Z::real).(\<not>(pi = min Z X) \<longrightarrow> 0 <= Y^2) "  
+(*^ only allows natural numbers powers. Does MT allow any exponent?*)  
+lemma foo: "\<forall>(X::real) (Y::real).\<forall> (Z::real).(\<not>(4 = min Z X) \<longrightarrow> 0 <= abs Y^3) "  
 (*apply(atomize)*)
   sorry
 
@@ -137,12 +137,35 @@ fun fix_bound_vars_atp_formula (var_list : string list)
   | ATP_Problem.AConn (conn, phis) =>
       ATP_Problem.AConn (conn, List.map (fix_bound_vars_atp_formula var_list) phis)
   | ATP_Problem.AAtom atp_term => ATP_Problem.AAtom (fix_bound_vars_atp_term var_list atp_term)
+
+  (*Not supporting ATyQunat*)
   | _ => error "Invalid atp_formula in atp_proof."
   )
+
+(*Will this work for the large numbers MT uses?! 
+  It takes very long when working with the approximations of pi*)
+fun num_of_int (i : int) : term =
+  let
+    fun inc (num : term) : term =
+      (case num of
+        Const ("Num.num.One", @{typ "num"}) => Const ("Num.num.Bit0", @{typ "num \<Rightarrow> num"}) $ num
+      | Const ("Num.num.Bit0", @{typ "num \<Rightarrow> num"}) $ x => Const ("Num.num.Bit1", @{typ "num \<Rightarrow> num"}) $ x
+      | Const ("Num.num.Bit1", @{typ "num \<Rightarrow> num"}) $ x => Const ("Num.num.Bit0", @{typ "num \<Rightarrow> num"}) $ (inc x)
+      | _ => error "The term is not a valid numeral."
+      )
+
+    fun num_of_int_tail_rec (i : int) (acc : term) : term = 
+      (case i of
+        1 => acc
+      | n => if n>1 then num_of_int_tail_rec (n-1) (inc acc)
+             else error ("This number cannot be converted to a numeral: " ^ (string_of_int i))
+      )
+  in
+    num_of_int_tail_rec i (Const ("Num.num.One", @{typ "num"}))
+  end
   
-(*TODO: Translate numbers. Power requires a nat argmumet!*)
-(*TODO: Transform bound variables to Bound*)
-(*TODO: Fix types of Free variables*)
+(*TODO: Power requires a nat argmumet! Fix the type of its second argument*)
+(*Made type of all Free variables real*)
 fun atp_term_to_term (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) 
   : term =
   (case atp_term of
@@ -159,7 +182,11 @@ fun atp_term_to_term (atp_term : (string, string ATP_Problem.atp_type) ATP_Probl
                       | NONE => error ("Invalid bound variable index: " ^ index)
                       )
                     end
-                  else Free (name, @{typ 'a})
+                  else
+                    (case Int.fromString name of
+                      SOME i => Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> real"}) $ (num_of_int i)
+                    | NONE => Free (name, @{typ real})
+                    )
                 else error ("Unsupported tptp operator: " ^ name)
       | SOME (isa_name, ty) => 
           let 
