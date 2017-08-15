@@ -47,6 +47,8 @@ val tptp_prefix_name_to_isabelle =
 
     (*Not supported in atp_problem_to_tptp*)
     |> Symtab.update_new ("$false", ("HOL.False", @{typ "bool"}))
+    |> Symtab.update_new ("lgen", (ATP_Problem_to_tptp.lgen, @{typ "bool \<Rightarrow> real \<Rightarrow> real \<Rightarrow> bool"}))
+    |> Symtab.update_new ("interval", (ATP_Problem_to_tptp.interval, @{typ "bool \<Rightarrow> real \<Rightarrow> bool \<Rightarrow> real \<Rightarrow> real \<Rightarrow> bool"}))
 
 fun fix_bound_vars_atp_term (var_list : string list)
                             (atp_term 
@@ -170,14 +172,40 @@ fun atp_term_to_term (atp_term : (string, string ATP_Problem.atp_type) ATP_Probl
                     then Const (isa_name, ty) $ 
                          (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> real"}) $ (num_of_int 2)) $
                          (atp_term_to_term (List.hd args))
-                    else 
-                      let 
-                        val termified_args = List.map atp_term_to_term args
-            
-                        fun isa_app ((arg:term), (func:term)) = func $ arg
-                      in
-                        List.foldl isa_app (Const (isa_name, ty)) termified_args 
-                      end
+                    else if isa_name = ATP_Problem_to_tptp.lgen andalso List.length args = 3
+                         then let val strict = (case List.hd args of 
+                                                 ATP_Problem.ATerm(("1", _), _) => Const ("HOL.True", @{typ "bool"}) 
+                                               | ATP_Problem.ATerm(("0", _), _) => Const ("HOL.False", @{typ "bool"})
+                                               | _ => error "Malformed lgen expression"
+                                               )
+                              in Const (isa_name, ty) $ strict $
+                                 (atp_term_to_term (List.nth (args, 1))) $
+                                 (atp_term_to_term (List.nth (args, 2)))
+                              end
+                         else if isa_name = ATP_Problem_to_tptp.interval andalso List.length args = 5
+                              then let val strict_left = (case List.hd args of 
+                                                 ATP_Problem.ATerm(("1", _), _) => Const ("HOL.True", @{typ "bool"}) 
+                                               | ATP_Problem.ATerm(("0", _), _) => Const ("HOL.False", @{typ "bool"})
+                                               | _ => error "Malformed lgen expression"
+                                               )
+                                       val strict_right = (case List.nth (args, 2) of 
+                                                 ATP_Problem.ATerm(("1", _), _) => Const ("HOL.True", @{typ "bool"}) 
+                                               | ATP_Problem.ATerm(("0", _), _) => Const ("HOL.False", @{typ "bool"})
+                                               | _ => error "Malformed lgen expression"
+                                               )
+                                   in Const (isa_name, ty) $ strict_left $
+                                      (atp_term_to_term (List.nth (args, 1))) $ strict_right $
+                                      (atp_term_to_term (List.nth (args, 3))) $
+                                      (atp_term_to_term (List.nth (args, 4)))
+                                   end
+                              else
+                                let 
+                                  val termified_args = List.map atp_term_to_term args
+                      
+                                  fun isa_app ((arg:term), (func:term)) = func $ arg
+                                in
+                                  List.foldl isa_app (Const (isa_name, ty)) termified_args 
+                                end
       )
 
   (*Not supporting atp_term AAbs*)

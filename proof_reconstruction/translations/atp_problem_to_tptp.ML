@@ -34,6 +34,9 @@ sig
 
   val nthrt : string
   val log : string
+
+  val lgen : string
+  val interval : string
 end;
 
 structure ATP_Problem_to_tptp : ATP_PROBLEM_TO_TPTP =
@@ -78,6 +81,10 @@ val pi = "Transcendental.pi"
 val nthrt = "NthRoot.root"
 val log = "Transcendental.log"
 (*Also support cbrt and nthroot and log but they are hardcoded in atp_term_to_tptp*)
+
+(*Not supporting this in the input yet, only in the output*)
+val lgen = "AxiomsGeneral.lgen"
+val interval = "AxiomsGeneral.interval"
 
 datatype name_type = Infix | Prefix | Unary | NoArgs
 
