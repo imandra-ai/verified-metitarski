@@ -8,6 +8,7 @@ sig
   val times : string
   val divide : string
   val power : string
+  val powr : string
   
   val less : string
   val less_eq : string
@@ -43,6 +44,8 @@ val uminus = "Groups.uminus_class.uminus"
 val times = "Groups.times_class.times"
 val divide = "Rings.divide_class.divide"
 val power = "Power.power_class.power"
+(*Different operator for real powers!*)
+val powr = "Transcendental.powr"
 
 (*Greater than is an abbreviation of less than in Isabelle.
   Not_eq (!=) is an abbreviation of Not and Eq. 
@@ -79,6 +82,7 @@ val isabelle_to_infix_tptp_name = Symtab.empty
   |> Symtab.update_new (times, (Infix, "*"))
   |> Symtab.update_new (divide, (Infix, "/"))
   |> Symtab.update_new (power, (Infix, "^"))
+  |> Symtab.update_new (powr, (Prefix, "pow"))
 
   |> Symtab.update_new (less, (Infix, "<"))
   |> Symtab.update_new (less_eq, (Infix, "<="))

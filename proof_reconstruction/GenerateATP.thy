@@ -6,19 +6,12 @@ declare[[ML_print_depth=50]]
   
 (*For the cube root use "root 3"*)
 (*^ only allows natural numbers powers. Does MT allow any exponent?*)  
-lemma foo: "\<forall>(X::real) (Y::real).\<forall> (Z::real).(\<not>(4 = min Z X) \<longrightarrow> 0 <= abs Y^3) "  
+lemma foo: "\<forall>(X::real) (Y::real).\<forall> (Z::real).(\<not>(4.3 = min Z X) \<longrightarrow> 0 <= abs (Y ^ 3)) "  
 (*apply(atomize)*)
   sorry
-
-lemma foo': "False"
-  sorry  
   
 lemma foo_metalevel: "0\<le>(X::real) \<Longrightarrow> 0\<le> X^2"
-  sorry
-
-ML\<open>
-Thm.concl_of @{thm foo'}
-\<close>    
+  sorry 
   
 ML\<open>
 val theorem = Thm.concl_of @{thm foo};
@@ -71,6 +64,7 @@ val tptp_prefix_name_to_isabelle =
     |> Symtab.update_new ("multiply", (ATP_Problem_to_tptp.times, @{typ "real\<Rightarrow>real\<Rightarrow>real"}))
     |> Symtab.update_new ("divide", (ATP_Problem_to_tptp.divide, @{typ "real\<Rightarrow>real\<Rightarrow>real"}))
     |> Symtab.update_new ("power", (ATP_Problem_to_tptp.power, @{typ "real\<Rightarrow>nat\<Rightarrow>real"}))
+    |> Symtab.update_new ("pow", (ATP_Problem_to_tptp.powr, @{typ "real\<Rightarrow>real\<Rightarrow>real"}))
 
     (*Greater, greater than: MT always replaces these with less*)
     (*not_eq translated to not and eq by ATP_Satallax.atp_proof_of_tstplike_proof*)
@@ -164,14 +158,12 @@ fun num_of_int (i : int) : term =
     num_of_int_tail_rec i (Const ("Num.num.One", @{typ "num"}))
   end
   
-(*TODO: Power requires a nat argmumet! Fix the type of its second argument*)
 (*Made type of all Free variables real*)
 fun atp_term_to_term (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) 
   : term =
   (case atp_term of
     ATP_Problem.ATerm ((name, _), args) =>
       (case Symtab.lookup tptp_prefix_name_to_isabelle name of
-        (*For now interpret all variables as free. Fix with an extra function!*)
         NONE => if args=[] then 
                   if String.isPrefix "bound." name
                   then 
@@ -188,14 +180,25 @@ fun atp_term_to_term (atp_term : (string, string ATP_Problem.atp_type) ATP_Probl
                     | NONE => Free (name, @{typ real})
                     )
                 else error ("Unsupported tptp operator: " ^ name)
-      | SOME (isa_name, ty) => 
-          let 
-            val termified_args = List.map atp_term_to_term args
-
-            fun isa_app ((arg:term), (func:term)) = func $ arg
-          in
-            List.foldl isa_app (Const (isa_name, ty)) termified_args 
-          end
+      | SOME (isa_name, ty) =>
+          (*Need to handle the case of natural powers separately 
+            because the type of the exponent needs to be nat not real*)
+          if isa_name = ATP_Problem_to_tptp.power andalso List.length args = 2 
+          then
+            (case atp_term_to_term (List.last args) of
+              Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> real"}) $ x => 
+                Const (isa_name, ty) $ (atp_term_to_term (List.hd args)) $ 
+                  (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> nat"}) $ x)
+            | _ => error "Invalid natural exponent"
+            )
+          else  
+            let 
+              val termified_args = List.map atp_term_to_term args
+  
+              fun isa_app ((arg:term), (func:term)) = func $ arg
+            in
+              List.foldl isa_app (Const (isa_name, ty)) termified_args 
+            end
       )
 
   (*Not supporting atp_term AAbs*)
