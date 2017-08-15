@@ -33,6 +33,7 @@ sig
   val pi : string
 
   val nthrt : string
+  val log : string
 end;
 
 structure ATP_Problem_to_tptp : ATP_PROBLEM_TO_TPTP =
@@ -75,7 +76,8 @@ val one = "Groups.one_class.one"
 val pi = "Transcendental.pi"
 
 val nthrt = "NthRoot.root"
-(*Also support cbrt and nthroot but they are hardcoded in atp_term_to_tptp*)
+val log = "Transcendental.log"
+(*Also support cbrt and nthroot and log but they are hardcoded in atp_term_to_tptp*)
 
 datatype name_type = Infix | Prefix | Unary | NoArgs
 
@@ -109,7 +111,7 @@ val isabelle_to_infix_tptp_name = Symtab.empty
   |> Symtab.update_new (zero, (NoArgs, "0"))
   |> Symtab.update_new (one, (NoArgs, "1"))
   |> Symtab.update_new (pi, (NoArgs, "pi"))
-  (*Also support cbrt and nthroot but they are hardcoded in atp_term_to_tptp*)
+  (*Also support cbrt and nthroot and log but they are hardcoded in atp_term_to_tptp*)
 
 
 fun atp_number_to_int (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) : int =
@@ -148,6 +150,13 @@ fun atp_term_to_tptp (atp_term : (string, string ATP_Problem.atp_type) ATP_Probl
       (case atp_numeral_to_int arg1 of
         "3" => "cbrt(" ^ (atp_term_to_tptp arg2) ^ ")"
       | n => "nthrt(" ^ n ^ ", " ^ (atp_term_to_tptp arg2) ^ ")"
+      )
+
+    (*Translating the log base 2 function. Fix: shouldn't be hardcoded here*)
+  | ATP_Problem.ATerm (("Transcendental.log", _), [arg1, arg2]) =>
+      (case atp_numeral_to_int arg1 of
+        "2" => "log(" ^ (atp_term_to_tptp arg2) ^ ")"
+      | _ => error "This is not a base two logarithm."
       )
 
     (*Translating natural numbers. Rational numbers are translated as fractions*)

@@ -1,62 +1,11 @@
-theory GenerateATP
-  imports Main Real Complex_Main
-begin
-  
-declare[[ML_print_depth=50]]   
-  
-(*For the cube root use "root 3"*)
-(*For log base 2 use "log 2"*)  
-(*^ only allows natural numbers powers. Does MT allow any exponent?*)  
-lemma foo: "\<forall>(X::real) (Y::real).\<forall> (Z::real).(\<not>((root 4 3) = min Z X) \<longrightarrow> 0 <= abs (Y ^ 3)) "  
-(*apply(atomize)*)
-  sorry
-  
-lemma foo_metalevel: "0\<le>(X::real) \<Longrightarrow> 0\<le> X^2"
-  sorry 
-  
-ML\<open>
-val theorem = Thm.concl_of @{thm foo};
-\<close>  
+signature TERMIFY_ATP_PROOF =
+sig
+  val termify_atp_proof : string ATP_Proof.atp_proof -> (term, string) ATP_Proof.atp_step list
+end;
 
-ML\<open>
-Thm.prems_of @{thm foo_metalevel}
-\<close>  
-  
-ML_file "~/Documents/internship/verified-metitarski/proof_reconstruction/thm_to_atp_problem.ML"  
-ML_file "~/Documents/internship/verified-metitarski/proof_reconstruction/atp_problem_to_tptp.ML"
-ML_file "~/Documents/internship/verified-metitarski/proof_reconstruction/mt_call.ML"
-ML_file "~/Documents/internship/verified-metitarski/proof_reconstruction/tptp_proof_to_atp_proof.ML"  
-  
-  
-(*Create ATP_Problem from a theorem*)  
-ML\<open>
-val atp_problem = Thm_to_ATP_Problem.thm_to_atp_problem @{context} @{thm foo};                                                                    
-\<close>
-  
-(*Create tptp string with the problem*)  
-ML\<open>
-val tptp_problem = ATP_Problem_to_tptp.atp_problem_to_tptp atp_problem;
-\<close>
+structure Termify_atp_proof : TERMIFY_ATP_PROOF =
+struct
 
-(*Give it to Metitarski*)  
-ML\<open>
-(*Path to Metitarski on this computer*)
-val mt_path = "/home/cristina/Documents/internship/metitarski/metit"
-
-val tptp_proof = Call_Metitarski.call_mt mt_path tptp_problem
-\<close>  
-
-(*Read the tptp proof into an ATP_Proof*)  
-ML\<open>
-val atp_proof = TPTP_Proof_to_atp_proof.tptp_proof_to_atp_proof atp_problem tptp_proof
-(*Need to deal with the case MT gives up*)
-\<close>
-
-ML\<open>
-open Symtab
-\<close>  
-  
-ML\<open>
 val tptp_prefix_name_to_isabelle = 
   Symtab.empty
     |> Symtab.update_new ("add", (ATP_Problem_to_tptp.plus, @{typ "real\<Rightarrow>real\<Rightarrow>real"}))
@@ -94,6 +43,7 @@ val tptp_prefix_name_to_isabelle =
  
     |> Symtab.update_new ("cbrt", (ATP_Problem_to_tptp.nthrt, @{typ "nat \<Rightarrow> real \<Rightarrow> real"}))
     |> Symtab.update_new ("nthrt", (ATP_Problem_to_tptp.nthrt, @{typ "nat \<Rightarrow> real \<Rightarrow> real"}))
+    |> Symtab.update_new ("log", (ATP_Problem_to_tptp.log, @{typ "real\<Rightarrow>real\<Rightarrow>real"}))
 
     (*Not supported in atp_problem_to_tptp*)
     |> Symtab.update_new ("$false", ("HOL.False", @{typ "bool"}))
@@ -214,14 +164,20 @@ fun atp_term_to_term (atp_term : (string, string ATP_Problem.atp_type) ATP_Probl
                   )
                 | _ => error "Unsupported root operator"
                 )
-               else  
-                let 
-                  val termified_args = List.map atp_term_to_term args
-      
-                  fun isa_app ((arg:term), (func:term)) = func $ arg
-                in
-                  List.foldl isa_app (Const (isa_name, ty)) termified_args 
-                end
+
+               (*Handle the base two logarithm separately because we need to add the base as an argument*)
+               else if isa_name = ATP_Problem_to_tptp.log andalso List.length args = 1
+                    then Const (isa_name, ty) $ 
+                         (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> real"}) $ (num_of_int 2)) $
+                         (atp_term_to_term (List.hd args))
+                    else 
+                      let 
+                        val termified_args = List.map atp_term_to_term args
+            
+                        fun isa_app ((arg:term), (func:term)) = func $ arg
+                      in
+                        List.foldl isa_app (Const (isa_name, ty)) termified_args 
+                      end
       )
 
   (*Not supporting atp_term AAbs*)
@@ -286,8 +242,5 @@ fun termify_atp_proof (atp_proof : string ATP_Proof.atp_proof)
     List.map termify_atp_proof_line atp_proof
   end;
 
-termify_atp_proof atp_proof;
-\<close>  
-  
-end
-  
+
+end;
