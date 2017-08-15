@@ -5,8 +5,9 @@ begin
 declare[[ML_print_depth=50]]   
   
 (*For the cube root use "root 3"*)
+(*For log base 2 use "log 2"*)  
 (*^ only allows natural numbers powers. Does MT allow any exponent?*)  
-lemma foo: "\<forall>(X::real) (Y::real).\<forall> (Z::real).(\<not>(4.3 = min Z X) \<longrightarrow> 0 <= abs (Y ^ 3)) "  
+lemma foo: "\<forall>(X::real) (Y::real).\<forall> (Z::real).(\<not>((root 4 3) = min Z X) \<longrightarrow> 0 <= abs (Y ^ 3)) "  
 (*apply(atomize)*)
   sorry
   
@@ -91,6 +92,9 @@ val tptp_prefix_name_to_isabelle =
     |> Symtab.update_new ("1", (ATP_Problem_to_tptp.one, @{typ "real"}))
     |> Symtab.update_new ("pi", (ATP_Problem_to_tptp.pi, @{typ "real"}))
  
+    |> Symtab.update_new ("cbrt", (ATP_Problem_to_tptp.nthrt, @{typ "nat \<Rightarrow> real \<Rightarrow> real"}))
+    |> Symtab.update_new ("nthrt", (ATP_Problem_to_tptp.nthrt, @{typ "nat \<Rightarrow> real \<Rightarrow> real"}))
+
     (*Not supported in atp_problem_to_tptp*)
     |> Symtab.update_new ("$false", ("HOL.False", @{typ "bool"}))
 
@@ -191,14 +195,33 @@ fun atp_term_to_term (atp_term : (string, string ATP_Problem.atp_type) ATP_Probl
                   (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> nat"}) $ x)
             | _ => error "Invalid natural exponent"
             )
-          else  
-            let 
-              val termified_args = List.map atp_term_to_term args
-  
-              fun isa_app ((arg:term), (func:term)) = func $ arg
-            in
-              List.foldl isa_app (Const (isa_name, ty)) termified_args 
-            end
+
+          (*Need to handle cube and higher roots separately because the root argument has to be nat*)
+          else if isa_name = ATP_Problem_to_tptp.nthrt
+               then
+                (case name of
+                  "cbrt" => 
+                    Const (isa_name, ty) $ 
+                      (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> nat"}) $ (num_of_int 3)) $ 
+                      (atp_term_to_term (List.hd args))
+                | "nthrt" =>
+                  (case atp_term_to_term (List.hd args) of
+                    Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> real"}) $ x => 
+                      Const (isa_name, ty) $  
+                        (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> nat"}) $ x) $
+                        (atp_term_to_term (List.nth (args, 1)))
+                  | _ => error "Invalid root"
+                  )
+                | _ => error "Unsupported root operator"
+                )
+               else  
+                let 
+                  val termified_args = List.map atp_term_to_term args
+      
+                  fun isa_app ((arg:term), (func:term)) = func $ arg
+                in
+                  List.foldl isa_app (Const (isa_name, ty)) termified_args 
+                end
       )
 
   (*Not supporting atp_term AAbs*)

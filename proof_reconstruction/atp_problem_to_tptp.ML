@@ -32,6 +32,7 @@ sig
   val one : string
   val pi : string
 
+  val nthrt : string
 end;
 
 structure ATP_Problem_to_tptp : ATP_PROBLEM_TO_TPTP =
@@ -73,6 +74,9 @@ val zero = "Groups.zero_class.zero"
 val one = "Groups.one_class.one"
 val pi = "Transcendental.pi"
 
+val nthrt = "NthRoot.root"
+(*Also support cbrt and nthroot but they are hardcoded in atp_term_to_tptp*)
+
 datatype name_type = Infix | Prefix | Unary | NoArgs
 
 val isabelle_to_infix_tptp_name = Symtab.empty
@@ -105,6 +109,7 @@ val isabelle_to_infix_tptp_name = Symtab.empty
   |> Symtab.update_new (zero, (NoArgs, "0"))
   |> Symtab.update_new (one, (NoArgs, "1"))
   |> Symtab.update_new (pi, (NoArgs, "pi"))
+  (*Also support cbrt and nthroot but they are hardcoded in atp_term_to_tptp*)
 
 
 fun atp_number_to_int (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) : int =
@@ -136,6 +141,7 @@ fun atp_numeral_to_int (atp_term : (string, string ATP_Problem.atp_type) ATP_Pro
 
 fun atp_term_to_tptp (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) : string = 
   (case atp_term of
+
     (*Translating the nth root.*)
     ATP_Problem.ATerm (("NthRoot.root", _), [arg1, arg2]) =>
       (*Fix: name of tptp root functions shouldn't be hardcoded here*)
