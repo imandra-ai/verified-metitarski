@@ -1,4 +1,4 @@
-fof(Conjecture,conjecture, ![X] : (![Y] : (![Z] : (~(log(3) = min(Z,X )) => (0 <= abs((Y ^ 3))))))).
+fof(Conjecture,conjecture, ![Y] : ((0 <= abs(log(Y))))).
 
 %fof(Conjecture,conjecture, ![X] : (![Y] : (?[Z] : (~(Z = tan((53 / 10))) => (((abs(X) - 1) * (X - 1)) < pi))))).
 

@@ -1,15 +1,13 @@
 signature CALL_METITARSKI =
 sig
-  val call_mt : string -> string -> string
+  val call_mt : string -> string -> string-> string
 end;
 
 structure Call_Metitarski : CALL_METITARSKI =
 struct
 
-fun call_mt (mt_path : string) (tptp_problem : string) :string =
-  let
-    val problem_path = "/home/cristina/problem.tptp"
-    
+fun call_mt (mt_path : string) (problem_path : string) (tptp_problem : string) :string =
+  let    
     (*Write the tptp_problem to a file*)
     fun write (file : string) (text : string) =
       let

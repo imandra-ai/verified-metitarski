@@ -1,5 +1,8 @@
 theory LnBounds
-  imports Main Real AxiomsGeneral "~~/../Documents/afp/Special_Function_Bounds/Log_CF_Bounds"
+  imports Main Real 
+    (*Path to the special function bounds afp entry. 
+      The method from the afp website for making this a relative path didn't work!*)
+    AxiomsGeneral "~~/../Documents/afp/Special_Function_Bounds/Log_CF_Bounds"
 begin
   
   lemma ln_lower1: "\<not> 0 < x
