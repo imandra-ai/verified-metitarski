@@ -7,16 +7,9 @@ declare[[ML_print_depth=50]]
 (*For the cube root use "root 3"*)
 (*For log base 2 use "log 2"*)  
 (*^ only allows natural numbers powers. Use powr for any real exponent?*)  
-lemma foo: "\<forall>(Y::real).0 <= abs (Y powr 3.3) "  
+lemma foo: "\<forall>(Y::real).0 <= abs (Y^ 3) "  
 (*apply(atomize)*)
-  sorry
-
-lemma foo': "interval True 2 True 3 2.5"    
-  sorry
-    
-ML\<open>
-Thm.concl_of @{thm foo'}
-\<close>    
+  sorry  
     
 ML\<open>
 val theorem = Thm.concl_of @{thm foo};

@@ -117,100 +117,122 @@ fun num_of_int (i : int) : term =
 (*Made type of all Free variables real*)
 fun atp_term_to_term (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) 
   : term =
-  (case atp_term of
-    ATP_Problem.ATerm ((name, _), args) =>
-      (case Symtab.lookup tptp_prefix_name_to_isabelle name of
-        NONE => if args=[] then 
-                  if String.isPrefix "bound." name
-                  then 
-                    let val index = String.extract (name, (String.size "bound."), NONE)
-                    in
-                      (case Int.fromString index of
-                        SOME i => Bound i
-                      | NONE => error ("Invalid bound variable index: " ^ index)
-                      )
-                    end
-                  else
-                    (case Int.fromString name of
-                      SOME i => Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> real"}) $ (num_of_int i)
-                    | NONE => Free (name, @{typ real})
-                    )
-                else error ("Unsupported tptp operator: " ^ name)
-      | SOME (isa_name, ty) =>
-          (*Need to handle the case of natural powers separately 
-            because the type of the exponent needs to be nat not real*)
-          if isa_name = ATP_Problem_to_tptp.power andalso List.length args = 2 
-          then
-            (case atp_term_to_term (List.last args) of
+  let
+    fun power_to_term isa_name ty args : term =
+      (case atp_term_to_term (List.last args) of
               Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> real"}) $ x => 
                 Const (isa_name, ty) $ (atp_term_to_term (List.hd args)) $ 
                   (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> nat"}) $ x)
             | _ => error "Invalid natural exponent"
             )
 
-          (*Need to handle cube and higher roots separately because the root argument has to be nat*)
-          else if isa_name = ATP_Problem_to_tptp.nthrt
-               then
-                (case name of
-                  "cbrt" => 
-                    Const (isa_name, ty) $ 
-                      (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> nat"}) $ (num_of_int 3)) $ 
-                      (atp_term_to_term (List.hd args))
-                | "nthrt" =>
-                  (case atp_term_to_term (List.hd args) of
-                    Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> real"}) $ x => 
-                      Const (isa_name, ty) $  
-                        (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> nat"}) $ x) $
-                        (atp_term_to_term (List.nth (args, 1)))
-                  | _ => error "Invalid root"
-                  )
-                | _ => error "Unsupported root operator"
-                )
+    fun nthrt_to_term name isa_name ty args : term =
+      (case name of
+        "cbrt" => 
+          Const (isa_name, ty) $ 
+            (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> nat"}) $ (num_of_int 3)) $ 
+            (atp_term_to_term (List.hd args))
+      | "nthrt" =>
+        (case atp_term_to_term (List.hd args) of
+          Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> real"}) $ x => 
+            Const (isa_name, ty) $  
+              (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> nat"}) $ x) $
+              (atp_term_to_term (List.nth (args, 1)))
+        | _ => error "Invalid root"
+        )
+      | _ => error "Unsupported root operator"
+    )
 
-               (*Handle the base two logarithm separately because we need to add the base as an argument*)
-               else if isa_name = ATP_Problem_to_tptp.log andalso List.length args = 1
-                    then Const (isa_name, ty) $ 
-                         (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> real"}) $ (num_of_int 2)) $
-                         (atp_term_to_term (List.hd args))
-                    else if isa_name = ATP_Problem_to_tptp.lgen andalso List.length args = 3
-                         then let val strict = (case List.hd args of 
-                                                 ATP_Problem.ATerm(("1", _), _) => Const ("HOL.True", @{typ "bool"}) 
-                                               | ATP_Problem.ATerm(("0", _), _) => Const ("HOL.False", @{typ "bool"})
-                                               | _ => error "Malformed lgen expression"
-                                               )
-                              in Const (isa_name, ty) $ strict $
-                                 (atp_term_to_term (List.nth (args, 1))) $
-                                 (atp_term_to_term (List.nth (args, 2)))
-                              end
-                         else if isa_name = ATP_Problem_to_tptp.interval andalso List.length args = 5
-                              then let val strict_left = (case List.hd args of 
-                                                 ATP_Problem.ATerm(("1", _), _) => Const ("HOL.True", @{typ "bool"}) 
-                                               | ATP_Problem.ATerm(("0", _), _) => Const ("HOL.False", @{typ "bool"})
-                                               | _ => error "Malformed lgen expression"
-                                               )
-                                       val strict_right = (case List.nth (args, 2) of 
-                                                 ATP_Problem.ATerm(("1", _), _) => Const ("HOL.True", @{typ "bool"}) 
-                                               | ATP_Problem.ATerm(("0", _), _) => Const ("HOL.False", @{typ "bool"})
-                                               | _ => error "Malformed lgen expression"
-                                               )
-                                   in Const (isa_name, ty) $ strict_left $
-                                      (atp_term_to_term (List.nth (args, 1))) $ strict_right $
-                                      (atp_term_to_term (List.nth (args, 3))) $
-                                      (atp_term_to_term (List.nth (args, 4)))
-                                   end
-                              else
-                                let 
-                                  val termified_args = List.map atp_term_to_term args
-                      
-                                  fun isa_app ((arg:term), (func:term)) = func $ arg
-                                in
-                                  List.foldl isa_app (Const (isa_name, ty)) termified_args 
-                                end
-      )
+    fun log_to_term isa_name ty args : term =
+       Const (isa_name, ty) $ 
+       (Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> real"}) $ (num_of_int 2)) $
+       (atp_term_to_term (List.hd args))
 
-  (*Not supporting atp_term AAbs*)
-  | _ => error "Invalid atp_term"
-  )
+    fun lgen_to_term isa_name ty args : term = 
+      let val strict = 
+        (case List.hd args of 
+           ATP_Problem.ATerm(("1", _), _) => Const ("HOL.True", @{typ "bool"}) 
+         | ATP_Problem.ATerm(("0", _), _) => Const ("HOL.False", @{typ "bool"})
+         | _ => error "Malformed lgen expression"
+         )
+      in Const (isa_name, ty) $ strict $
+         (atp_term_to_term (List.nth (args, 1))) $
+         (atp_term_to_term (List.nth (args, 2)))
+      end
+    
+    fun interval_to_term isa_name ty args : term =
+      let val strict_left = 
+          (case List.hd args of 
+             ATP_Problem.ATerm(("1", _), _) => Const ("HOL.True", @{typ "bool"}) 
+           | ATP_Problem.ATerm(("0", _), _) => Const ("HOL.False", @{typ "bool"})
+           | _ => error "Malformed lgen expression"
+           )
+          val strict_right = (case List.nth (args, 2) of 
+                   ATP_Problem.ATerm(("1", _), _) => Const ("HOL.True", @{typ "bool"}) 
+                 | ATP_Problem.ATerm(("0", _), _) => Const ("HOL.False", @{typ "bool"})
+                 | _ => error "Malformed lgen expression"
+                 )
+          in Const (isa_name, ty) $ strict_left $
+          (atp_term_to_term (List.nth (args, 1))) $ strict_right $
+          (atp_term_to_term (List.nth (args, 3))) $
+          (atp_term_to_term (List.nth (args, 4)))
+          end
+  in
+    (case atp_term of
+      ATP_Problem.ATerm ((name, _), args) =>
+        (case Symtab.lookup tptp_prefix_name_to_isabelle name of
+          NONE => if args=[] then 
+                    if String.isPrefix "bound." name
+                    then 
+                      let val index = String.extract (name, (String.size "bound."), NONE)
+                      in
+                        (case Int.fromString index of
+                          SOME i => Bound i
+                        | NONE => error ("Invalid bound variable index: " ^ index)
+                        )
+                      end
+                    else
+                      (case Int.fromString name of
+                        SOME i => Const ("Num.numeral_class.numeral", @{typ "num \<Rightarrow> real"}) $ (num_of_int i)
+                      | NONE => Free (name, @{typ real})
+                      )
+                  else error ("Unsupported tptp operator: " ^ name)
+        | SOME (isa_name, ty) =>
+            (*Need to handle the case of natural powers separately 
+              because the type of the exponent needs to be nat not real*)
+            if isa_name = ATP_Problem_to_tptp.power andalso List.length args = 2 
+            then power_to_term isa_name ty args
+  
+            (*Need to handle cube and higher roots separately because the root argument has to be nat*)
+            else if isa_name = ATP_Problem_to_tptp.nthrt
+                 then nthrt_to_term name isa_name ty args
+  
+                 (*Handle the base two logarithm separately because we need to add the base as an argument*)
+                 else if isa_name = ATP_Problem_to_tptp.log andalso List.length args = 1
+                      then log_to_term isa_name ty args
+  
+                      (*Lgen*)
+                      else if isa_name = ATP_Problem_to_tptp.lgen andalso List.length args = 3
+                           then lgen_to_term isa_name ty args
+  
+                           (*Interval*)
+                           else if isa_name = ATP_Problem_to_tptp.interval andalso List.length args = 5
+                                then interval_to_term isa_name ty args
+  
+                                (*All other operators*)
+                                else
+                                  let 
+                                    val termified_args = List.map atp_term_to_term args
+                        
+                                    fun isa_app ((arg:term), (func:term)) = func $ arg
+                                  in
+                                    List.foldl isa_app (Const (isa_name, ty)) termified_args 
+                                  end
+        )
+    (*Not supporting atp_term AAbs*)
+    | _ => error "Invalid atp_term"
+    )
+  end
 
 fun atp_formula_to_term (atp_formula 
   : (string, string (*This is the type that ATPSatallax returns, not: string ATP_Problem.atp_type*), 
