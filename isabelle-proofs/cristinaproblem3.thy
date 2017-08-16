@@ -16,7 +16,7 @@ proof(rule ccontr)
   have refute_0_3: "-(x + y) < x + y \<or> 
                     0 \<le> x + y \<or> 
                     x + y \<le> abs(x + y)"
-    using refute_0_2 abs_negative_axiom by auto    
+    using refute_0_2 abs_negative by auto    
  
   (*resolve*)    
   have refute_0_4: "-(x + y) < x + y \<or> 0 \<le> x + y"
@@ -36,7 +36,7 @@ proof(rule ccontr)
   have refute_0_8: "x + y < 0 \<or>
                     x + y < x + y \<or>
                     x + y \<le> abs(x + y)"
-    using refute_0_7 abs_nonnegative_axiom by auto    
+    using refute_0_7 abs_nonnegative by auto    
     
   (*resolve*)   
   have refute_0_9: "x + y < 0 \<or>
