@@ -1,6 +1,5 @@
 */*.trace
 
-*/*.thy~
 */*.thy#
 */*.thy.marks
 
