@@ -55,7 +55,7 @@ ML_file "mt_call.ML"
 ML_file "tptp_proof_to_atp_proof.ML"
 ML_file "termify_atp_proof.ML"
 
-ML_file "termified_atp_proof_to_isar.ML" 
+(*ML_file "termified_atp_proof_to_isar.ML"*) 
 ML_file "termified_atp_proof_to_indirect_proof.ML"  
   
   
@@ -104,7 +104,7 @@ val preamble = "theory Proof \n imports Main Real\n" ^
   "begin \n"
 val end_string = "\nend";
 
-write "/home/cristina/Proof.thy" (preamble ^ lemma ^ indirect_isar_proof ^ end_string)
+write isar_proof_path (preamble ^ lemma ^ indirect_isar_proof ^ end_string)
 
 \<close>  
   

@@ -12,5 +12,8 @@ val ln_bounds_path = "~/Documents/internship/verified-metitarski/isabelle-proofs
 (*Path to the MT executable*)
 val mt_path = "/home/cristina/Documents/internship/metitarski/metit"
 
-(*Path to the file where MT reads the problem from*)
+(*Path to the file where the tptp problem is written and MT reads it from*)
 val problem_path = "/home/cristina/problem.tptp"
+
+(*Path to the file the isar proof is written to.*)
+val isar_proof_path = "/home/cristina/Proof.thy"
