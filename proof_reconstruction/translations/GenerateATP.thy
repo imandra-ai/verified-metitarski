@@ -1,20 +1,20 @@
 theory GenerateATP
-  imports Main Real Complex_Main
+  imports Main Real Complex_Main "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsGeneral"
 begin
   
 declare[[ML_print_depth=50]]   
   
 (*For the cube root use "root 3"*)
 (*For log base 2 use "log 2"*)  
-(*^ only allows natural numbers powers. Use powr for any real exponent?*)  
+(*^ only allows natural numbers powers. Use powr infix for any real exponent?*)  
   
   
 (*lemma foo: "\<forall>(Y::real).0 <= Y^2 "*)
   
 (*Redirected proof involves a case split. Not supporting that at the moment.*)  
 (*lemma foo: "\<forall>(Y::real).0 <= abs(Y^3)"*)
-(*lemma foo: "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X^2)"  *)
-lemma foo: "\<forall>(X::real) (Y::real).X+Y \<le> abs (X+Y)"
+lemma foo: "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X^2)"  
+(*lemma foo: "\<forall>(X::real) (Y::real).X+Y \<le> abs (X+Y)"*)
   
 (*apply(atomize)*)
   sorry  
