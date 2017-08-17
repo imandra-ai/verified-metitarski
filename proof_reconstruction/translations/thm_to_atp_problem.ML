@@ -1,6 +1,6 @@
 signature THM_TO_ATP_PROBLEM =
 sig
-    val thm_to_atp_problem : Proof.context -> thm -> (string * string ATP_Problem.atp_problem_line list) list
+    val thm_to_atp_problem : Proof.context -> term -> string -> (string * string ATP_Problem.atp_problem_line list) list
 end;
 
 structure Thm_to_ATP_Problem : THM_TO_ATP_PROBLEM =
@@ -117,12 +117,11 @@ fun fix_bound_vars (bound_vars : string list) (atp_formula
   end
     
 
-fun thm_to_atp_problem ctxt (thm : Thm.thm) : string ATP_Problem.atp_problem =
+fun thm_to_atp_problem ctxt (thm : term) (thm_name : string) : string ATP_Problem.atp_problem =
   let
-    val formula = fix_bound_vars [] (term_to_atp_formula ctxt (Envir.beta_norm (Thm.concl_of thm)))
+    val formula = fix_bound_vars [] (term_to_atp_formula ctxt (Envir.beta_norm thm))
   in
-    (*Calling all problems "Conjecture" for now*)
-    [("Conjecture" ,[ATP_Problem.Formula (("conjecture", ""), ATP_Problem.Conjecture, formula, NONE, [])])]
+    [(thm_name ,[ATP_Problem.Formula (("conjecture", ""), ATP_Problem.Conjecture, formula, NONE, [])])]
   end;
 
 end;

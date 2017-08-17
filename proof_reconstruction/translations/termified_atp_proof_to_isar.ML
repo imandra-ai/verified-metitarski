@@ -132,8 +132,8 @@ fun termified_atp_proof_to_isar (termified_atp_proof : (term, string) ATP_Proof.
       val the_isar_proof = my_isar_proof [] assms direct_graph
 
     in 
-      string_of_isar_proof @{context} 1 1 the_isar_proof
-      (*string_of_direct_proof direct_graph*)
+      (*string_of_isar_proof @{context} 1 1 the_isar_proof*)
+      string_of_direct_proof direct_graph
     end
 
 end;

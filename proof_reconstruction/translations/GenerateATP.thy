@@ -19,9 +19,12 @@ lemma foo: "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X
 (*apply(atomize)*)
   sorry  
    
-   
+    
 ML\<open>
 val theorem = Thm.concl_of @{thm foo};
+fun delimiter #"." = true
+  | delimiter _ = false
+val thm_name = List.last (String.tokens delimiter (Thm.derivation_name @{thm foo}))
 \<close>  
 
 (*Getting an Isabelle term from a conjecture string*)  
@@ -58,13 +61,13 @@ ML_file "mt_call.ML"
 ML_file "tptp_proof_to_atp_proof.ML"
 ML_file "termify_atp_proof.ML"
 
-(*ML_file "termified_atp_proof_to_isar.ML"*) 
+ML_file "termified_atp_proof_to_isar.ML" 
 ML_file "termified_atp_proof_to_indirect_proof.ML"  
   
   
 (*Create ATP_Problem from a theorem*)  
 ML\<open>
-val atp_problem = Thm_to_ATP_Problem.thm_to_atp_problem @{context} @{thm foo};                                                                    
+val atp_problem = Thm_to_ATP_Problem.thm_to_atp_problem @{context} theorem thm_name;                                                                    
 \<close>
   
 (*Create tptp string with the problem*)  
@@ -97,7 +100,8 @@ val (lemma, indirect_isar_proof) =
 \<close>  
   
 ML\<open>
-(*val proof = Termified_atp_proof_to_isar.termified_atp_proof_to_isar termified_atp_proof*)
+val proof = Termified_atp_proof_to_isar.termified_atp_proof_to_isar termified_atp_proof;
+writeln proof;
 
 (* Eventually we should automatically select what axioms to include *)
 val preamble = "theory Proof \n imports Main Real\n" ^ 
@@ -110,6 +114,7 @@ val end_string = "\nend";
 write MT_Config.isar_proof_path (preamble ^ lemma ^ indirect_isar_proof ^ end_string)
 
 \<close>  
+ 
   
 end
   
