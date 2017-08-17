@@ -51,8 +51,8 @@ fun termified_atp_proof_to_indirect_proof (ctxt : Proof.context) (termified_proo
               end
           )
 
-        (*Hardcoding the proof method to auto for now*)
-        val proof_method = " by auto\n\n" (*Don't forget the newline!*)
+        (*Sorry everything for now*)
+        val proof_method = "sorry\n\n" (*" by auto\n\n"*) (*Don't forget the newline!*)
         val indent = "       "
       in
         prop_line ^ indent ^ prems_line ^ proof_method
