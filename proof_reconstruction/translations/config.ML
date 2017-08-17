@@ -1,5 +1,23 @@
 (*All the paths used in the translation from an isabelle lemma to a termified atp proof*)
 
+signature CONFIG =
+sig
+
+val trans_path : string
+
+val abs_ax_path : string
+val general_ax_path : string
+val ln_bounds_path : string
+
+val mt_path : string
+val problem_path : string
+val isar_proof_path : string
+
+end
+
+structure MT_Config : CONFIG =
+struct
+
 (*Path to the translation folder. Not needed if GenerateATP is in the same folder.
   Will be used in a .thy file*)
 val trans_path = "~/Documents/internship/verified-metitarski/proof_reconstruction/translations/"
@@ -17,3 +35,5 @@ val problem_path = "/home/cristina/problem.tptp"
 
 (*Path to the file the isar proof is written to.*)
 val isar_proof_path = "/home/cristina/Proof.thy"
+
+end;

@@ -18,20 +18,23 @@ lemma foo: "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X
   
 (*apply(atomize)*)
   sorry  
-    
-    
+   
+   
 ML\<open>
 val theorem = Thm.concl_of @{thm foo};
 \<close>  
 
+(*Getting an Isabelle term from a conjecture string*)  
+ML\<open>
+List.hd (Syntax.check_props @{context}
+  [Syntax.parse_prop @{context} "\<forall>(X::real).(((0 <= X) \<longrightarrow> (abs((ln((1 + X)) - X)) <= power X 2)))"])
+\<close>  
+  
   
 ML\<open>
 
 fun pretty_thm ctxt thm =
   Syntax.pretty_term ctxt (Thm.prop_of thm);
-
-(*val thm_string = Pretty.string_of  (pretty_thm @{context} @{thm foo})*)
-(*val thm_string = Thm.string_of_thm @{context} @{thm foo}*)
 
 fun write (file : string) (text : string) =
   let
@@ -72,7 +75,7 @@ val tptp_problem = ATP_Problem_to_tptp.atp_problem_to_tptp atp_problem;
 (*Give it to Metitarski*)  
 ML\<open>
 (*mt_path comes from config.ML*)
-val tptp_proof = Call_Metitarski.call_mt mt_path problem_path tptp_problem
+val tptp_proof = Call_Metitarski.call_mt MT_Config.mt_path MT_Config.problem_path tptp_problem
 \<close>  
 
 (*Read the tptp proof into an ATP_Proof*)  
@@ -98,13 +101,13 @@ ML\<open>
 
 (* Eventually we should automatically select what axioms to include *)
 val preamble = "theory Proof \n imports Main Real\n" ^ 
-  "\"" ^ abs_ax_path ^ "\"\n" ^ 
-  "\"" ^ general_ax_path ^ "\"\n" ^
-  "\"" ^ ln_bounds_path ^ "\"\n" ^
+  "\"" ^ MT_Config.abs_ax_path ^ "\"\n" ^ 
+  "\"" ^ MT_Config.general_ax_path ^ "\"\n" ^
+  "\"" ^ MT_Config.ln_bounds_path ^ "\"\n" ^
   "begin \n"
 val end_string = "\nend";
 
-write isar_proof_path (preamble ^ lemma ^ indirect_isar_proof ^ end_string)
+write MT_Config.isar_proof_path (preamble ^ lemma ^ indirect_isar_proof ^ end_string)
 
 \<close>  
   
