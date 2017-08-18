@@ -13,6 +13,7 @@ ML_file "termified_atp_proof_to_indirect_proof.ML"
   
 ML_file "prove.ML"
 
+(*Read problems line-by-line*)
 ML\<open>
 fun read_conjectures (file_path : string) : unit =
   let

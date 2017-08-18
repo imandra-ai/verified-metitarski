@@ -9,14 +9,14 @@ declare[[ML_print_depth=50]]
 (*^ only allows natural numbers powers. Use powr infix for any real exponent?*)  
   
   
+  
 (*lemma foo: "\<forall>(Y::real).0 <= Y^2 "*)
   
 (*Redirected proof involves a case split. Not supporting that at the moment.*)  
 (*lemma foo: "\<forall>(Y::real).0 <= abs(Y^3)"*)
-lemma foo: "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X^2)"  
+lemma foo: "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X^2)"
 (*lemma foo: "\<forall>(X::real) (Y::real).X+Y \<le> abs (X+Y)"*)
   
-(*apply(atomize)*)
   sorry  
    
     
@@ -54,9 +54,11 @@ ML_file "mt_call.ML"
 ML_file "tptp_proof_to_atp_proof.ML"
 ML_file "termify_atp_proof.ML"
 
-ML_file "termified_atp_proof_to_isar.ML" 
+(*ML_file "termified_atp_proof_to_isar.ML" *)
 ML_file "termified_atp_proof_to_indirect_proof.ML"  
   
+ML_file "sledgehammer_isar.ML"
+
   
 (*Create ATP_Problem from a term*)  
 ML\<open>
@@ -91,10 +93,43 @@ ML\<open>
 val (lemma, indirect_isar_proof) = 
   Termified_atp_proof_to_indirect_proof.termified_atp_proof_to_indirect_proof @{context} termified_atp_proof
 \<close>  
+ 
+(*Using isar_proof_text instead*)  
+ML\<open>
+val ctxt : Proof.context = @{context}
+val debug : bool = true
+val isar_proofs : bool option = SOME true
+val smt_proofs : bool option = SOME false
+val num_chained : int = 1 (*What is this?*)
+
+  val verbose : bool = true
+  val alt_metis_args : string option * string option = (NONE, NONE)
+  val preplay_timeout : Time.time = Time.fromSeconds 5
+  val compress : real option = NONE
+  val try0 : bool = true
+  val minimize : bool = false
+  val atp_proof0 : (term, string) ATP_Proof.atp_step list = termified_atp_proof
+  val goal : thm = @{thm foo}
+val isar_params : unit ->Sledgehammer_Isar.isar_params = 
+  fn () => (verbose, alt_metis_args, preplay_timeout, compress, try0, minimize, atp_proof0, goal)
+
+  val used_facts : (string * Sledgehammer_Isar.stature) list = []
+  val preplay : Sledgehammer_Proof_Methods.proof_method = Sledgehammer_Proof_Methods.Auto_Method  (*?*)
+  val one_line_play : Sledgehammer_Proof_Methods.play_outcome = Sledgehammer_Proof_Methods.Play_Failed  (*?*)
+  val banner : string = ""
+  val subgoal : int = 1
+  val subgoal_count : int = 1
+val one_line_params : Sledgehammer_Isar.one_line_params =
+  ((used_facts, (preplay, one_line_play)), banner, subgoal, subgoal_count);
+
+Sledgehammer_Isar.isar_proof_text ctxt debug num_chained isar_proofs smt_proofs 
+  isar_params one_line_params
+\<close>  
   
 ML\<open>
-val proof = Termified_atp_proof_to_isar.termified_atp_proof_to_isar termified_atp_proof;
+(*val proof = Termified_atp_proof_to_isar.termified_atp_proof_to_isar termified_atp_proof;
 writeln proof;
+*)
 
 (* Eventually we should automatically select what axioms to include *)
 val preamble = "theory Proof \n imports Main Real Transcendental\n" ^ 
