@@ -1,0 +1,12 @@
+bla
+abs-problem-1,\<forall>(X::real).(((0 <= X) --> (abs((ln((1 + X)) - X)) <= power X 2)))
+abs-problem-2,\<forall>(X::real).(((abs(X) <= 1/2) --> (abs((ln((1 + X)) - X)) <= (2 * (power X  2)))))
+abs-problem-3,\<forall>(X::real).(((Not((X <= 0)) \<and> (X <= 582811643/1000000000)) --> (abs(ln((1 - X))) <= ((3 * X) / 2))))
+sin-problem-3,\<forall>(X::real).(((Not((X <= 0)) \<and> (X <= pi)) --> ((sin(X) / X) <= 1)))
+cos-problem-1,\<forall>(X::real).(((Not((X <= 0)) \<and> Not((1/2 <= X))) --> Not((cos((pi * X)) <= (1 - (2 * X))))))
+cos-problem-2,\<forall>(X::real).(((Not((X <= 1/2)) \<and> Not((1 <= X))) --> Not(((1 - (2 * X)) <= cos((pi * X))))))
+cos-problem-3,\<forall>(X::real).((Not((1 <= abs(X))) --> (abs(cos(X)) <= 1)))
+tan-problem-1,\<forall>(X::real).((((0 <= X) \<and> Not(((pi / 2) <= X))) --> ((1 - cos(X)) <= tan((X / 2)))))
+tan-problem-2,\<forall>(X::real).((((0 <= X) \<and> Not((314159/200000 <= X))) --> (X <= tan(X))))
+two-variable-problem-1,\<forall>(X::real).(\<forall>(Y::real).(((Not((Y <= 0)) \<and> Not((X <= Y))) --> Not(((ln((X / Y)) / 2) <= ((X - Y) / (X + Y)))))))
+two-variable-problem-2,\<forall>(X::real).(\<forall>(Y::real).(((Not((X <= 0)) \<and> Not((Y <= 0))) --> Not((exp(X) <= exp(((X * Y) / (X + Y))))))))

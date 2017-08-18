@@ -33,7 +33,7 @@ val mt_path = "/home/cristina/Documents/internship/metitarski/metit"
 (*Path to the file where the tptp problem is written and MT reads it from*)
 val problem_path = "/home/cristina/problem.tptp"
 
-(*Path to the file the isar proof is written to.*)
-val isar_proof_path = "/home/cristina/Proof.thy"
+(*Path to where the isar proof is written to.*)
+val isar_proof_path = "/home/cristina/"
 
 end;

@@ -119,9 +119,13 @@ fun fix_bound_vars (bound_vars : string list) (atp_formula
 
 fun thm_to_atp_problem ctxt (thm : term) (thm_name : string) : string ATP_Problem.atp_problem =
   let
+    (*Replace - with _*)
+    fun mt_thm_name #"-" = #"_"
+      | mt_thm_name c = c
+
     val formula = fix_bound_vars [] (term_to_atp_formula ctxt (Envir.beta_norm thm))
   in
-    [(thm_name ,[ATP_Problem.Formula (("conjecture", ""), ATP_Problem.Conjecture, formula, NONE, [])])]
+    [(String.map mt_thm_name thm_name ,[ATP_Problem.Formula (("conjecture", ""), ATP_Problem.Conjecture, formula, NONE, [])])]
   end;
 
 end;

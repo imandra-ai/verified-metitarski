@@ -17,7 +17,7 @@ fun tptp_proof_to_atp_proof (atp_problem : string ATP_Problem.atp_problem) (tptp
     (*Remove cnf axioms*)
     val trimmed_tptp_proof : string = 
       if String.isSubstring "GaveUp" tptp_proof 
-      then error "Metitarski gave up."  (*To deal with a failed proof*)
+      then raise Fail "Metitarski gave up."  (*To deal with a failed proof*)
       else Substring.position "fof" (CharVectorSlice.full tptp_proof)
             |> #2
             |> CharVectorSlice.vector;

@@ -1,5 +1,5 @@
 theory GenerateATP
-  imports Main Real Complex_Main "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsGeneral"
+  imports Main Real Transcendental "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsGeneral"
 begin
   
 declare[[ML_print_depth=50]]   
@@ -35,10 +35,6 @@ List.hd (Syntax.check_props @{context}
   
   
 ML\<open>
-
-fun pretty_thm ctxt thm =
-  Syntax.pretty_term ctxt (Thm.prop_of thm);
-
 fun write (file : string) (text : string) =
   let
     val out_str = TextIO.openOut file
@@ -47,9 +43,6 @@ fun write (file : string) (text : string) =
   in
     ()
   end;
-
-(*write "/home/cristina/theorem.thy" thm_string*)
-
 \<close>    
   
 (*No absolute paths needed because this theory is in the same folder as the ML files.*)  
@@ -65,7 +58,7 @@ ML_file "termified_atp_proof_to_isar.ML"
 ML_file "termified_atp_proof_to_indirect_proof.ML"  
   
   
-(*Create ATP_Problem from a theorem*)  
+(*Create ATP_Problem from a term*)  
 ML\<open>
 val atp_problem = Thm_to_ATP_Problem.thm_to_atp_problem @{context} theorem thm_name;                                                                    
 \<close>
@@ -104,14 +97,16 @@ val proof = Termified_atp_proof_to_isar.termified_atp_proof_to_isar termified_at
 writeln proof;
 
 (* Eventually we should automatically select what axioms to include *)
-val preamble = "theory Proof \n imports Main Real\n" ^ 
+val preamble = "theory Proof \n imports Main Real Transcendental\n" ^ 
   "\"" ^ MT_Config.abs_ax_path ^ "\"\n" ^ 
   "\"" ^ MT_Config.general_ax_path ^ "\"\n" ^
   "\"" ^ MT_Config.ln_bounds_path ^ "\"\n" ^
   "begin \n"
 val end_string = "\nend";
 
-write MT_Config.isar_proof_path (preamble ^ lemma ^ indirect_isar_proof ^ end_string)
+val proof_path = MT_Config.isar_proof_path ^ "Proof.thy";
+
+write proof_path (preamble ^ lemma ^ indirect_isar_proof ^ end_string)
 
 \<close>  
  
