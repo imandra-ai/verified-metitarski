@@ -1,4 +1,6 @@
-fof(abs_problem_1,conjecture, ![X] : ((0 <= X) => (abs((ln((1 + X)) - X)) <= (X ^ 2)))).
+fof(abs_problem_1,conjecture, ![X] : (X=2 => ~(X<=1))).
+
+%fof(abs_problem_1,conjecture, ![X] : ((0 <= X) => (abs((ln((1 + X)) - X)) <= (X ^ 2)))).
 
 %fof(Conjecture,conjecture, ![X] : (![Y] : (?[Z] : (~(Z = tan((53 / 10))) => (((abs(X) - 1) * (X - 1)) < pi))))).
 

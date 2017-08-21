@@ -28,7 +28,7 @@ val general_ax_path = "~/Documents/internship/verified-metitarski/isabelle-proof
 val ln_bounds_path = "~/Documents/internship/verified-metitarski/isabelle-proofs/LnBounds"
 
 (*Path to the MT executable*)
-val mt_path = "/home/cristina/Documents/internship/metitarski/metit"
+val mt_path = "/home/cristina/Documents/internship/ai-metitarski/metitarski/metit"
 
 (*Path to the file where the tptp problem is written and MT reads it from*)
 val problem_path = "/home/cristina/problem.tptp"
