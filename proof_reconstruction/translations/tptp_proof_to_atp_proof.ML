@@ -39,8 +39,21 @@ fun tptp_proof_to_atp_proof (atp_problem : string ATP_Problem.atp_problem) (tptp
             in replace_from ((name, role, t, rule, from')::accum) name'' proof
             end
     
-    val conjecture_name = (#1 (#1 (hd atp_proof)))
-                    handle Empty => raise Fail "The parsed atp_proof is empty." 
+    val conjecture_name = 
+      (#1 (#1 (hd atp_proof)))
+          handle Empty => 
+            let
+             (*To handle a weird thing that tactic does*)
+             val message = (case atp_problem of
+                            [(_, [ATP_Problem.Formula (_, _, ATP_Problem.AAtom (ATP_Problem.ATerm (("Pure.dummy_pattern", [ATP_Problem.AType (("prop", []), [])]), [])), _, _)])] =>
+                              "toplevel term is Pure.dummy_pattern"
+                           | _ => ""
+                           )
+            in
+              if message = ""
+              then raise Fail ("The parsed atp_proof is empty: " ^ message)
+              else ""
+            end
     
     val atp_proof = 
         atp_proof

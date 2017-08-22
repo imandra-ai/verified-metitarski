@@ -17,7 +17,7 @@ sig
 
   type isar_params =
     bool * (string option * string option) * Time.time * real option * bool * bool
-    * (term, string) atp_step list * term
+    * (term, string) atp_step list * thm
 
   val proof_text : Proof.context -> bool -> bool option -> bool option -> (unit -> isar_params) ->
     int -> one_line_params -> string
@@ -136,7 +136,7 @@ fun add_lines_pass2 res [] = rev res
 
 type isar_params =
   bool * (string option * string option) * Time.time * real option * bool * bool
-  * (term, string) atp_step list * term
+  * (term, string) atp_step list * thm
 
 val basic_systematic_methods = [Metis_Method (NONE, NONE), Meson_Method, Blast_Method, SATx_Method]
 val basic_simp_based_methods = [Auto_Method, Simp_Method, Fastforce_Method, Force_Method]
@@ -157,7 +157,7 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
 
     fun generate_proof_text () =
       let
-        val (verbose, alt_metis_args, preplay_timeout, compress, try0, minimize, atp_proof0, (goal:term)) =
+        val (verbose, alt_metis_args, preplay_timeout, compress, try0, minimize, atp_proof0, goal) =
           isar_params ()
       in
         if null atp_proof0 then
@@ -171,7 +171,7 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
               else if smt_proofs = SOME true then SMT_Method :: meths
               else meths
 
-            val (params, _, concl_t) = ATP_Util_Term.strip_subgoal goal subgoal ctxt
+            val (params, _, concl_t) = strip_subgoal goal subgoal ctxt
             val fixes = map (fn (s, T) => (Binding.name s, SOME T, NoSyn)) params
             val ctxt = ctxt |> Variable.set_body false |> Proof_Context.add_fixes fixes |> snd
 

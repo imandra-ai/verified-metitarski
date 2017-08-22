@@ -178,7 +178,7 @@ fun atp_term_to_tptp (atp_term : (string, string ATP_Problem.atp_type) ATP_Probl
       )
   | ATP_Problem.ATerm ((name, _), arg1::args) =>
       (case Symtab.lookup isabelle_to_infix_tptp_name name of
-        NONE => error ("Unknown tptp name for " ^ name ^ " operator")
+        NONE => error ("ATP_Problem_to_tptp: Unknown tptp name for " ^ name ^ " operator")
       | SOME (Infix, tptp_name) =>
           (case args of
             (*Enclose all infix operators in parantheses to ensure correct precedence. 
