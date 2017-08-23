@@ -51,7 +51,7 @@ fun tptp_proof_to_atp_proof (atp_problem : string ATP_Problem.atp_problem) (tptp
                            )
             in
               if message = ""
-              then raise Fail ("The parsed atp_proof is empty: " ^ message)
+              then raise Fail ("The parsed atp_proof is empty")
               else ""
             end
     

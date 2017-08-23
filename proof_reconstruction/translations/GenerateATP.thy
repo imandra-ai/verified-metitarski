@@ -1,11 +1,13 @@
 theory GenerateATP
-  imports Main Real Transcendental "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsGeneral"
+  imports Main Real Transcendental "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsAbs" "~~/src/HOL/Library/Sum_of_Squares"
 begin
   
-declare[[ML_print_depth=50]]   
+declare[[ML_print_depth=50]]
+  
 
 (*No absolute paths needed because this theory is in the same folder as the ML files.*)  
 ML_file "config.ML"  
+(*ML_file "sledgehammer_isar_proof.ML"*)
 ML_file "sledgehammer_isar.ML"
  
 ML_file "thm_to_atp_problem.ML"  
@@ -64,7 +66,7 @@ fun isar_proof (st : thm) (ctxt : Proof.context)  =
       val alt_metis_args : string option * string option = (NONE, NONE)
       val preplay_timeout : Time.time = Time.fromSeconds 5
       val compress : real option = NONE
-      val try0 : bool = true
+      val try0 : bool = false (*if true, tries the automated methods before translating the MT proof*)
       val minimize : bool = false
       val atp_proof0 : (term, string) ATP_Proof.atp_step list = termified_atp_proof
       val goal : thm = st (*the theorem that was passed as an argument to the function*)
@@ -83,6 +85,7 @@ fun isar_proof (st : thm) (ctxt : Proof.context)  =
     (*atp_proof*)
     (*conjecture*)
     (*atp_problem*)
+    (*tptp_proof*)
     ML_Pretty.format_polyml 86 (ML_Pretty.to_polyml (ML_Pretty.str (Sledgehammer_Isar.isar_proof_text ctxt debug num_chained isar_proofs smt_proofs 
       isar_params one_line_params)))
   end
@@ -95,12 +98,46 @@ fun isar_proof (st : thm) (ctxt : Proof.context)  =
 (*lemma foo: "\<forall>(Y::real).0 <= Y^2 "*)
   
 (*Redirected proof involves a case split. Not supporting that at the moment.*)  
-(*lemma foo: "\<forall>(Y::real).0 <= abs(Y^3)"*)
+lemma foo: "\<forall>(Y::real).0 <= abs(Y^3)"
 (*lemma foo: "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X^2)"*)
-lemma foo: "\<forall>(X::real) (Y::real).X+Y \<le> abs (X+Y)"  
-  ML_val{*
-    isar_proof (#goal @{Isar.goal}) @{context}*}
+(*lemma foo: "\<forall>(X::real) (Y::real).X+Y \<le> abs (X+Y)"  *)
+(*  ML_val{*writeln (isar_proof (#goal @{Isar.goal}) @{context})*}*)
   apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+proof -
+  { fix rr :: real
+    have 0: "- (rr * (rr * rr)) < 0 \<or> \<bar>rr * (rr * rr)\<bar> \<noteq> - (rr * (rr * rr)) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
+      by auto (* 8 ms *)
+    then have ff1: "- (rr * (rr * rr)) < 0 \<or> 0 \<le> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
+      by (metis abs_negative) (* failed *)
+    have 2: "rr * (rr * rr) < 0 \<or> \<bar>rr * (rr * rr)\<bar> \<noteq> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
+      by auto (* 8 ms *)
+    then have ff2: "rr * (rr * rr) < 0 \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
+      using abs_nonnegative by auto (*instead of metis*) (* failed *)
+    have "\<not> - (rr * (rr * rr)) < 0 \<or> \<not> rr * (rr * rr) < 0"
+      by sos (* failed *)
+    moreover
+    { assume "\<not> - (rr * (rr * rr)) < 0"
+      then have " rr * (rr * rr) < 0 \<longrightarrow> \<not> - (rr * (rr * rr)) < 0 \<and> \<not> 0 \<le> rr * (rr * rr)"
+        by metis (* failed *)
+      moreover
+      { assume "\<not> - (rr * (rr * rr)) < 0 \<and> \<not> 0 \<le> rr * (rr * rr)"
+        then have "\<not> \<bar>rr ^ 3\<bar> < 0"
+          using ff1 by metis (* failed *) }
+      ultimately have "\<not> \<bar>rr ^ 3\<bar> < 0 \<or> \<not> rr * (rr * rr) < 0"
+        by metis (* 12 ms *) }
+    moreover
+    { assume "\<not> rr * (rr * rr) < 0"
+      then have "\<not> \<bar>rr ^ 3\<bar> < 0"
+        using ff2 by metis (* failed *) }
+    ultimately have "\<not> \<bar>rr ^ 3\<bar> < 0"
+      by metis (* 12 ms *) }
+  then have "\<forall>r. \<not> \<bar>(r::real) ^ 3\<bar> < 0"
+    by linarith (*instead of moura*) (* failed *)
+  then show ?thesis
+    by auto (*instead of metis*) (* failed *)
+qed
+
+
   ML_val {* 
   val st =  Thm.concl_of (#goal @{Isar.goal});
  *}

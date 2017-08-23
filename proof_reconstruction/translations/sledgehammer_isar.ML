@@ -48,7 +48,8 @@ structure String_Redirect = ATP_Proof_Redirect(
 
 open String_Redirect
 
-val trace = Attrib.setup_config_bool @{binding sledgehammer_isar_trace} (K false)
+(* (K true) to print the refute_graph and direct_graph *)
+val trace = Attrib.setup_config_bool @{binding sledgehammer_isar_trace} (K true)
 
 val e_definition_rule = "definition"
 val e_skolemize_rule = "skolemize"
@@ -85,8 +86,66 @@ fun label_of_clause [(num, _)] = raw_label_of_num num
 
 fun add_global_fact ss = apsnd (union (op =) ss)
 
+(* A list with the names of all the metitarski axioms. Without the Bessel function. Up to general.ax inclusively.*)
+val metitarski_axioms : string list =
+  ["abs_negative", "abs_nonnegative",
+   "abs_cases", "abs_pos", "abs_neg",
+   "arccos_upper_bound", "arccos_lower_bound",
+   "arcsin_lower_bound_pos_1", "arcsin_lower_bound_pos_2", "arcsin_lower_bound_pos_3", "arcsin_lower_bound_pos_5", "arcsin_lower_bound_neg_1", "arcsin_lower_bound_neg_2",
+   "arcsin_upper_bound_pos_1", "arcsin_upper_bound_pos_2", "arcsin_upper_bound_neg_1", "arcsin_upper_bound_neg_2", "arcsin_upper_bound_neg_3", "arcsin_upper_bound_neg_5",
+   "atan_upper_bound_case_41", "atan_upper_bound_case_42", "atan_upper_bound_case_43", "atan_upper_bound_case_44", "atan_lower_bound_case_41", "atan_lower_bound_case_42", "atan_lower_bound_case_43", "atan_lower_bound_case_44",
+   "atan_upper_bound_case_51", "atan_upper_bound_case_52", "atan_upper_bound_case_53", "atan_upper_bound_case_54", "atan_lower_bound_case_51", "atan_lower_bound_case_52", "atan_lower_bound_case_53", "atan_lower_bound_case_54", "atan_upper_bound_case_63", "atan_lower_bound_case_63", 
+   "atan_lower_bound_case_11", "atan_lower_bound_case_12", "atan_lower_bound_case_13", "atan_lower_bound_case_14", "atan_lower_bound_case_31", "atan_lower_bound_case_32", "atan_lower_bound_case_33", "atan_lower_bound_case_34",
+   "atan_upper_bound_case_11", "atan_upper_bound_case_12", "atan_upper_bound_case_13", "atan_upper_bound_case_14", "atan_upper_bound_case_31", "atan_upper_bound_case_32", "atan_upper_bound_case_33", "atan_upper_bound_case_34",
+   "cbrt_lower_bound_1", "cbrt_lower_bound_2_small", "cbrt_lower_bound_2", "cbrt_lower_bound_2_large", "cbrt_lower_bound_3",
+   "cbrt_upper_bound_1", "cbrt_upper_bound_2_small", "cbrt_upper_bound_2", "cbrt_upper_bound_2_large", "cbrt_upper_bound_3",
+   "cos_upper_bound_0", "cos_upper_bound_2", "cos_lower_bound_0", "cos_lower_bound_2",
+   "cos_upper_bound_const_1", "cos_lower_bound_const_m1",
+   "cos_upper_bound_1", "cos_upper_bound_3", "cos_upper_bound_5", "cos_lower_bound_1", "cos_lower_bound_3", "cos_lower_bound_5",
+   "cos_upper_bound_7", "cos_lower_bound_7",
+   "cosh_taylor_lower_bound_pos1", "cosh_taylor_lower_bound_neg1", "cosh_lower_bound_neg1", "cosh_lower_bound_pos1", "cosh_lower_bound_neg2", "cosh_lower_bound_pos2",
+   "cosh_upper_bound_neg0", "cosh_upper_bound_pos1", "cosh_upper_bound_neg1", "cosh_upper_bound_pos2", "cosh_upper_bound_neg2",
+   "cos_lower_bound_linear", "cos_upper_bound_linear", "exp_lower_bound_cf4", "exp_lower_bound_cf5", "exp_lower_bound_cf6", "exp_lower_bound_cf7", "exp_upper_bound_cf4", "exp_upper_bound_cf5", "exp_upper_bound_cf6", "exp_upper_bound_cf7",
+   "exp_monotone1", "exp_monotone2", "exp_positive", "exp_lower_taylor_1", "exp_lower_taylor_5_cubed", "exp_lower_bound_cf2", "exp_lower_bound_cf3",
+   "exp_upper_bound_case_3", "exp_upper_bound_case_5", "exp_upper_bound_cf1", "exp_upper_bound_cf2", "exp_upper_bound_cf3",
+   "lgen_le_pos", "lgen_less_pos", "lgen_le_neg", "lgen_less_neg", "leq_left_divide_mul_pos", "leq_left_mul_divide_pos", "leq_right_divide_mul_pos", "leq_right_mul_divide_pos", "leq_left_divide_mul_neg", "leq_left_mul_divide_neg", "leq_right_divide_mul_neg", "leq_right_mul_divide_neg", "interval_intro", "interval_elim1", "interval_elim2",
+   "ln_upper_bound_cf11", "ln_upper_bound_cf13", "ln_upper_bound_cf15", "ln_lower_bound_cf11", "ln_lower_bound_cf13", "ln_lower_bound_cf15",
+   "ln_zero1", "ln_zero2", "ln_monotone1", "ln_monotone2", 
+   "ln_lower_bound_cf1", "ln_lower_bound_cf3", "ln_lower_bound_cf5", "ln_lower_bound_cf7", "ln_lower_bound_cf9",
+   "ln_upper_bound_cf1", "ln_upper_bound_cf3", "ln_upper_bound_cf5", "ln_upper_bound_cf7", "ln_upper_bound_cf9",
+   "log_def",
+   "max_1", "max_2", "min_1", "min_2",
+   "nthrt_lower_bound_1", "nthrt_lower_bound_2_small", "nthrt_lower_bound_2", "nthrt_lower_bound_2_large", "nthrt_lower_bound_3",
+   "nthrt_upper_bound_1", "nthrt_upper_bound_2_small", "nthrt_upper_bound_2", "nthrt_upper_bound_2_large", "nthrt_lower_bound_3",
+   "pi_upper_bound", "pi_lower_bound",
+   "pow_upper_bound", "pow_lower_bound", "pow_def",
+   "sin_upper_bound_0_neg", "sin_upper_bound_0_pos", "sin_upper_bound_2_neg", "sin_upper_bound_2_pos", "sin_lower_bound_0_neg", "sin_lower_bound_0_pos", "sin_lower_bound_2_neg", "sin_lower_bound_2_pos",
+   "sin_upper_bound_const_1", "sin_lower_bound_const_m1",
+   "sin_upper_bound_1_neg", "sin_upper_bound_1_pos", "sin_upper_bound_3_neg", "sin_upper_bound_3_pos", "sin_upper_bound_5_neg", "sin_upper_bound_5_pos", "sin_lower_bound_1_neg", "sin_lower_bound_1_pos", "sin_lower_bound_3_neg", "sin_lower_bound_3_pos", "sin_lower_bound_5_neg", "sin_lower_bound_5_pos",
+   "sin_upper_bound_7_neg", "sin_upper_bound_7_pos", "sin_lower_bound_7_neg", "sin_lower_bound_7_pos",
+   "sinh_taylor_lower_bound_pos1", "sinh_lower_bound_neg1", "sinh_lower_bound_pos1", "sinh_lower_bound_neg2", "sinh_lower_bound_pos2",
+   "sinh_taylor_upper_bound_neg1", "sinh_upper_bound_pos1", "sinh_upper_bound_neg1", "sinh_upper_bound_pos2", "sinh_upper_bound_neg2",
+   "sin_lower_bound_linear", "sin_upper_bound_linear", 
+   "sqrt_upper_bound_1", "sqrt_upper_bound_4", "sqrt_lower_bound_1", "sqrt_lower_bound_4",
+   "sqrt_ge", "sqrt_le", "sqrt_monotone1", "sqrt_monotone2",
+   "sqrt_squared", "sqrt_lower_bound_id", "sqrt_lower_bound_0", "sqrt_lower_bound_2_small", "sqrt_lower_bound_2", "sqrt_lower_bound_2_large",
+   "sqrt_squared", "sqrt_upper_bound_0", "sqrt_upper_bound_2_small", "sqrt_upper_bound_2", "sqrt_upper_bound_2_large",
+   "tan_upper_bound", "tan_lower_bound", "tan_def",
+   "tanh_lower_bound_neg0", "tanh_lower_bound_neg1", "tanh_lower_bound_pos1", "tanh_lower_bound_neg2", "tanh_lower_bound_pos2",
+   "tanh_upper_bound_neg1", "tanh_upper_bound_pos0", "tanh_upper_bound_pos1", "tanh_upper_bound_neg2", "tanh_upper_bound_pos2",
+   "tan_lower_bound_pos0", "tan_lower_bound_pos1", "tan_lower_bound_pos2", "tan_lower_bound_neg1", "tan_lower_bound_neg2", "tan_lower_bound_neg3",
+   "tan_upper_bound_pos1", "tan_upper_bound_pos2", "tan_upper_bound_pos3", "tan_upper_bound_neg0", "tan_upper_bound_neg1", "tan_upper_bound_neg2",
+   "trans"
+  ]
+
 fun add_fact_of_dependency [(_, ss as _ :: _)] = add_global_fact ss
-  | add_fact_of_dependency names = apfst (insert (op =) (label_of_clause names))
+  | add_fact_of_dependency names = 
+      (case names of
+        [(n, [])] => if member (op =) metitarski_axioms n then add_global_fact [n]
+                     else apfst (insert (op =) (label_of_clause names))
+      | _ => apfst (insert (op =) (label_of_clause names))
+      )
+      
 
 fun add_line_pass1 (line as (name, role, t, rule, [])) lines =
     (* No dependencies: lemma (for Z3), fact, conjecture, or (for Vampire) internal facts or
@@ -104,7 +163,7 @@ fun add_line_pass1 (line as (name, role, t, rule, [])) lines =
   | add_line_pass1 line lines = line :: lines
 
 fun add_lines_pass2 res [] = rev res
-  | add_lines_pass2 res ((line as (name, role, t, rule, deps)) :: lines) =
+  | add_lines_pass2 res ((line as (name as (str_name, _), role, t, rule, deps)) :: lines) =
     let
       fun normalize role =
         role = Conjecture ? (HOLogic.dest_Trueprop #> s_not #> HOLogic.mk_Trueprop)
@@ -190,7 +249,9 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
             val atp_proof =
               fold_rev add_line_pass1 atp_proof0 []
               |> add_lines_pass2 []
-
+           
+            (*  val _ = @{print} atp_proof  *)
+              
             val conjs =
               map_filter (fn (name, role, _, _, _) =>
                   if member (op =) [Conjecture, Negated_Conjecture] role then SOME name else NONE)
@@ -305,12 +366,14 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                   val l = label_of_clause c
                   val t = prop_of_clause c
                   val rule = rule_of_clause_id id
+                  val _ = @{print} gamma
                   val skolem = is_skolemize_rule rule
 
                   val deps = ([], [])
                     |> fold add_fact_of_dependency gamma
                     |> is_maybe_ext_rule rule ? add_global_fact [short_thm_name ctxt ext]
                     |> sort_facts
+
                   val meths =
                     (if skolem then skolem_methods
                      else if is_arith_rule rule then arith_methods
