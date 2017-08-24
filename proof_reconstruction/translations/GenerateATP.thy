@@ -1,5 +1,11 @@
 theory GenerateATP
-  imports Main Real Transcendental "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsAbs" "~~/src/HOL/Library/Sum_of_Squares"
+  imports 
+    Main 
+    Real 
+    Transcendental 
+    "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsAbs" 
+    "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsGeneral" 
+    "~~/src/HOL/Library/Sum_of_Squares"
 begin
   
 declare[[ML_print_depth=50]]
@@ -112,12 +118,20 @@ fun isar_proof (st : thm) (ctxt : Proof.context)  =
 (*For log base 2 use "log 2"*)  
 (*^ only allows natural numbers powers. Use powr infix for any real exponent?*)   
 
-(*lemma foo: "\<forall>(Y::real).0 <= Y^2 "*)
+lemma foo1: "\<forall>(Y::real).0 <= Y^2 "
+  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+proof -
+  { fix rr :: real
+    have "\<not> rr\<^sup>2 < 0"
+      by sos (* 12 ms *) }
+  then have "\<forall>r. \<not> (r::real)\<^sup>2 < 0"
+    by blast (* 4 ms *)
+  then show ?thesis
+    by auto (* 4 ms *)
+qed
   
-(*Redirected proof involves a case split. Not supporting that at the moment.*)  
-lemma foo: "\<forall>(Y::real).0 <= abs(Y^3)"
-(*lemma foo: "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X^2)"*)
-(*lemma foo: "\<forall>(X::real) (Y::real).X+Y \<le> abs (X+Y)"  *)
+
+lemma foo2: "\<forall>(Y::real).0 <= abs(Y^3)"
 (*  ML_val{*writeln (isar_proof (#goal @{Isar.goal}) @{context})*}*)
   apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
 proof -
@@ -125,7 +139,7 @@ proof -
     have "- (rr * (rr * rr)) < 0 \<or> \<bar>rr * (rr * rr)\<bar> \<noteq> - (rr * (rr * rr)) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
       by auto (* 4 ms *)
     then have ff1: "- (rr * (rr * rr)) < 0 \<or> 0 \<le> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
-      using abs_negative by auto (* 8 ms *)
+      by (metis abs_negative) (* 12 ms *)
     have "rr * (rr * rr) < 0 \<or> \<bar>rr * (rr * rr)\<bar> \<noteq> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
       by auto (* 4 ms *)
     then have ff2: "rr * (rr * rr) < 0 \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
@@ -135,68 +149,186 @@ proof -
     moreover
     { assume "\<not> - (rr * (rr * rr)) < 0"
       then have "rr * (rr * rr) < 0 \<longrightarrow> \<not> - (rr * (rr * rr)) < 0 \<and> \<not> 0 \<le> rr * (rr * rr)"
-        by auto (* 8 ms *)
+        by auto (* 4 ms *)
       moreover
       { assume "\<not> - (rr * (rr * rr)) < 0 \<and> \<not> 0 \<le> rr * (rr * rr)"
         then have "\<not> \<bar>rr ^ 3\<bar> < 0"
-          using ff1 by auto (* 44 ms *) }
+          using ff1 by auto (* 20 ms *) }
       ultimately have "\<not> \<bar>rr ^ 3\<bar> < 0 \<or> \<not> rr * (rr * rr) < 0"
-        by metis (* 8 ms *) }
+        by metis (* 16 ms *) }
     moreover
     { assume "\<not> rr * (rr * rr) \<le> 0"
       then have "\<not> rr * (rr * rr) < 0"
-        by sos (* 28 ms *) }
+        by sos (* 20 ms *) }
     ultimately have "\<not> \<bar>rr ^ 3\<bar> < 0 \<or> \<not> rr * (rr * rr) < 0"
-      by metis (* 8 ms *)
+      by metis (* 16 ms *)
     moreover
     { assume "\<not> rr * (rr * rr) < 0"
       then have "\<not> \<bar>rr ^ 3\<bar> < 0"
         using ff2 by auto (* 20 ms *) }
     ultimately have "\<not> \<bar>rr ^ 3\<bar> < 0"
-      by metis (* 8 ms *) }
-  then have "\<forall>r. \<not> \<bar>(r::real) ^ 3\<bar> < 0"
-      by moura (* failed *)
-    then show ?thesis
-      by auto (* 20 ms *)
-  qed
-
-
-(*proof -
-  { fix rr :: real
-    have 0: "- (rr * (rr * rr)) < 0 \<or> \<bar>rr * (rr * rr)\<bar> \<noteq> - (rr * (rr * rr)) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
-      by auto (* 8 ms *)
-    then have ff1: "- (rr * (rr * rr)) < 0 \<or> 0 \<le> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
-      by (metis abs_negative) (* failed *)
-    have 2: "rr * (rr * rr) < 0 \<or> \<bar>rr * (rr * rr)\<bar> \<noteq> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
-      by auto (* 8 ms *)
-    then have ff2: "rr * (rr * rr) < 0 \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
-      using abs_nonnegative by auto (*instead of metis*) (* failed *)
-    have "\<not> - (rr * (rr * rr)) < 0 \<or> \<not> rr * (rr * rr) < 0"
-      by sos (* failed *)
-    moreover
-    { assume "\<not> - (rr * (rr * rr)) < 0"
-      then have " rr * (rr * rr) < 0 \<longrightarrow> \<not> - (rr * (rr * rr)) < 0 \<and> \<not> 0 \<le> rr * (rr * rr)"
-        by metis (* failed *)
-      moreover
-      { assume "\<not> - (rr * (rr * rr)) < 0 \<and> \<not> 0 \<le> rr * (rr * rr)"
-        then have "\<not> \<bar>rr ^ 3\<bar> < 0"
-          using ff1 by metis (* failed *) }
-      ultimately have "\<not> \<bar>rr ^ 3\<bar> < 0 \<or> \<not> rr * (rr * rr) < 0"
-        by metis (* 12 ms *) }
-    moreover
-    { assume "\<not> rr * (rr * rr) < 0"
-      then have "\<not> \<bar>rr ^ 3\<bar> < 0"
-        using ff2 by metis (* failed *) }
-    ultimately have "\<not> \<bar>rr ^ 3\<bar> < 0"
       by metis (* 12 ms *) }
   then have "\<forall>r. \<not> \<bar>(r::real) ^ 3\<bar> < 0"
-    by linarith (*instead of moura*) (* failed *)
+    by blast (* 0.0 ms *)
   then show ?thesis
-    by auto (*instead of metis*) (* failed *)
-qed*)
-    
-(*  ML_prf{**}*)  
-    
+    by auto (* 16 ms *)
+qed
+
+ 
+lemma foo3: "\<forall>(X::real) (Y::real).X+Y \<le> abs (X+Y)"     
+  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+proof -
+  { fix rr :: real and rra :: real
+    have "- (rr + rra) < rr + rra \<or> \<bar>rr + rra\<bar> \<noteq> - (rr + rra) \<or> rr + rra \<le> \<bar>rr + rra\<bar>"
+      by auto (* 48 ms *)
+    then have ff1: "- (rr + rra) < rr + rra \<or> 0 \<le> rr + rra \<or> rr + rra \<le> \<bar>rr + rra\<bar>"
+      by (metis abs_negative) (* 16 ms *)
+    have "rr + rra < rr + rra \<or> \<bar>rr + rra\<bar> \<noteq> rr + rra \<or> rr + rra \<le> \<bar>rr + rra\<bar>"
+      by auto (* 4 ms *)
+    then have ff2: "rr + rra < 0 \<or> rr + rra < rr + rra \<or> rr + rra \<le> \<bar>rr + rra\<bar>"
+      using abs_nonnegative by auto (* 44 ms *)
+    have "rr * - 1 \<le> rra \<longrightarrow> \<not> rr + rra < 0 \<and> \<not> rr + rra < rr + rra"
+      by auto (* 12 ms *)
+    moreover
+    { assume "\<not> rr * - 1 \<le> rra"
+      then have "\<not> rr * - 1 \<le> rra \<and> \<not> rra \<le> rr * - 1 \<or> \<not> - (rr + rra) < rr + rra \<and> \<not> 0 \<le> rr + rra"
+        by auto (* 28 ms *)
+      moreover
+      { assume "\<not> - (rr + rra) < rr + rra \<and> \<not> 0 \<le> rr + rra"
+        then have "\<not> \<bar>rr + rra\<bar> < rr + rra"
+          using ff1 by auto (* 44 ms *) }
+      moreover
+      { assume "\<not> rr * - 1 \<le> rra \<and> \<not> rra \<le> rr * - 1"
+        then have "\<not> rr + rra < 0 \<and> \<not> rr + rra < rr + rra"
+          by sos (* 40 ms *) }
+      ultimately have "\<bar>rr + rra\<bar> < rr + rra \<longrightarrow> \<not> rr + rra < 0 \<and> \<not> rr + rra < rr + rra"
+        by metis (* 36 ms *) }
+    ultimately have "\<bar>rr + rra\<bar> < rr + rra \<longrightarrow> \<not> rr + rra < 0 \<and> \<not> rr + rra < rr + rra"
+      by metis (* 20 ms *)
+    moreover
+    { assume "\<not> rr + rra < 0 \<and> \<not> rr + rra < rr + rra"
+      then have "\<not> \<bar>rr + rra\<bar> < rr + rra"
+        using ff2 by auto (* 24 ms *) }
+    ultimately have "\<not> \<bar>rr + rra\<bar> < rr + rra"
+      by metis (* 16 ms *) }
+  then have "\<forall>r ra. \<not> \<bar>(r::real) + ra\<bar> < r + ra"
+    by fastforce (* 0.0 ms *)
+  then show ?thesis
+    by auto (* 36 ms *)
+qed
+  
+lemma foo4: "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X^2)"
+  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+proof -
+  { fix rr :: real
+    have "rr * rr < rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<noteq> rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
+      by auto (* 28 ms *)
+    then have ff1: "rr * - 1 + ln (1 + rr) < 0 \<or> rr * rr < rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
+      using abs_nonnegative by auto (* 48 ms *)
+    have ff2: "\<not> lgen False (X_000043 - 1) X_000044 \<or> X_000043 \<le> 0 \<or> ln X_000043 \<le> X_000044"
+      by (metis lgen_le_neg ln_upper_bound_cf1) (* failed *)
+    have "rr * rr < - (rr * - 1 + ln (1 + rr)) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<noteq> - (rr * - 1 + ln (1 + rr)) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
+      by auto (* 28 ms *)
+    then have ff3: "rr * rr < - (rr * - 1 + ln (1 + rr)) \<or> 0 \<le> rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
+      by (metis abs_negative) (* 16 ms *)
+    have ff4: "\<not> lgen False X_000051 ((X_000050 - 1) / X_000050) \<or> X_000050 \<le> 0 \<or> X_000051 \<le> ln X_000050"
+      by (metis lgen_le_neg ln_lower_bound_cf1) (* failed *)
+    have "\<not> rr \<le> - 1 \<or> \<not> - 1 < rr"
+      by auto (* 0.0 ms *)
+    moreover
+    { assume "\<not> rr \<le> - 1"
+      then have "\<not> rr * (rr * (rr * - 1)) \<le> 0 \<and> \<not> rr \<le> - 1 \<or> \<not> rr < rr * (1 + rr * - 1) * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
+        by metis (* failed *)
+      moreover
+      { assume "\<not> rr < rr * (1 + rr * - 1) * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
+        then have "\<not> rr / (1 + rr) < rr * (1 + rr * - 1)"
+          by (metis leq_right_divide_mul_pos) (* failed *)
+        then have "ln (1 + rr) < rr \<longrightarrow> \<not> rr / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> ln (1 + rr)"
+          by auto (* 8 ms *)
+        moreover
+        { assume "\<not> rr / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> ln (1 + rr)"
+          then have "- 1 < rr \<longrightarrow> \<not> (- 1 + (1 + rr)) / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> 1 + rr \<le> 0 \<and> \<not> rr \<le> ln (1 + rr)"
+            by auto (* 12 ms *)
+          moreover
+          { assume "\<not> (- 1 + (1 + rr)) / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> 1 + rr \<le> 0 \<and> \<not> rr \<le> ln (1 + rr)"
+            then have "\<not> rr * rr < - (rr * - 1 + ln (1 + rr)) \<and> \<not> 0 \<le> rr * - 1 + ln (1 + rr)"
+              using ff4 by metis (* > 5.0 s, timed out *)
+            then have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+              using ff3 by metis (* failed *) }
+          ultimately have "- 1 < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+            by metis (* 16 ms *) }
+        ultimately have "- 1 < rr \<and> ln (1 + rr) < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+          by metis (* 12 ms *) }
+      moreover
+      { assume "\<not> rr * (rr * (rr * - 1)) \<le> 0 \<and> \<not> rr \<le> - 1"
+        then have "0 < rr * rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+          by sos (* failed *)
+        moreover
+        { assume "\<not> 0 < rr * rr"
+          then have "\<not> 0 < rr * rr \<and> \<not> - 1 < rr \<or> \<not> rr < rr * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
+            by auto (* 0.0 ms *)
+          moreover
+          { assume "\<not> rr < rr * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
+            then have "\<not> rr / (1 + rr) < rr"
+              by (metis leq_right_divide_mul_pos) (* failed *)
+            then have "- 1 < rr \<longrightarrow> \<not> (- 1 + (1 + rr)) / (1 + rr) < rr \<and> \<not> 1 + rr \<le> 0"
+              by auto (* 4 ms *)
+            moreover
+            { assume "\<not> (- 1 + (1 + rr)) / (1 + rr) < rr \<and> \<not> 1 + rr \<le> 0"
+              then have "\<not> ln (1 + rr) < rr"
+    using ff4 by metis (* > 5.0 s, timed out *) }
+  ultimately have "\<not> ln (1 + rr) < rr \<or> \<not> - 1 < rr"
+    by metis (* 8 ms *) }
+          moreover
+          { assume "\<not> 0 < rr * rr \<and> \<not> - 1 < rr"
+            then have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+              by sos (* failed *) }
+          ultimately have "- 1 < rr \<and> ln (1 + rr) < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+            by metis (* 12 ms *) }
+        ultimately have "- 1 < rr \<and> ln (1 + rr) < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+          by metis (* 16 ms *) }
+      ultimately have "- 1 < rr \<and> ln (1 + rr) < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+        by metis (* 24 ms *)
+      moreover
+      { assume "\<not> ln (1 + rr) < rr"
+        then have "- 1 < rr \<longrightarrow> \<not> ln (1 + rr) < rr \<and> \<not> rr \<le> - 1"
+          by auto (* 4 ms *)
+        moreover
+        { assume "\<not> ln (1 + rr) < rr \<and> \<not> rr \<le> - 1"
+          then have "\<not> rr * (rr * - 1) \<le> 0 \<and> \<not> rr \<le> - 1 \<or> \<not> rr * (1 + rr) < - 1 + (1 + rr) \<and> \<not> ln (1 + rr) < rr \<and> \<not> 1 + rr \<le> 0"
+            by metis (* failed *)
+          moreover
+          { assume "\<not> rr * (1 + rr) < - 1 + (1 + rr) \<and> \<not> ln (1 + rr) < rr \<and> \<not> 1 + rr \<le> 0"
+            then have "\<not> rr * - 1 + ln (1 + rr) < 0 \<and> \<not> rr * rr < rr * - 1 + ln (1 + rr)"
+              using ff2 by metis (* > 5.0 s, timed out *)
+            then have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+              using ff1 by metis (* failed *) }
+          moreover
+          { assume "\<not> rr * (rr * - 1) \<le> 0 \<and> \<not> rr \<le> - 1"
+            then have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+              by sos (* failed *) }
+          ultimately have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+            by metis (* 16 ms *) }
+        ultimately have "- 1 < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+          by metis (* 8 ms *) }
+      ultimately have "- 1 < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+        by metis (* 8 ms *) }
+    ultimately have "- 1 < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+      by metis (* 4 ms *)
+    moreover
+    { assume "\<not> - 1 < rr"
+      then have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+        by sos (* failed *) }
+    ultimately have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
+      by metis (* 8 ms *) }
+  then have "\<forall>r. \<not> (r::real)\<^sup>2 < \<bar>ln (1 + r) - r\<bar> \<or> \<not> 0 \<le> r"
+    by satx (* 0.0 ms *)
+  then show ?thesis
+    by auto (* failed *)
+qed
+  
+(*  ML_prf{**}*)    
+  
 (*  
 ML\<open>
   val conjecture : term = List.hd (Syntax.check_props @{context}
