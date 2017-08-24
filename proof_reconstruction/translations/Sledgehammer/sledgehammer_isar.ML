@@ -69,6 +69,7 @@ val zipperposition_cnf_rule = "cnf"
 val metitarski_decision_rule = "decision"
 val metitarski_resolution_rule = "resolve"
 val metitarski_canonicalize_rule = "canonicalize"
+val metitarski_arithmetic_rule = "arithmetic"
 
 val skolemize_rules =
   [e_definition_rule, e_skolemize_rule, leo2_extcnf_forall_neg_rule, satallax_skolemize_rule,
@@ -87,6 +88,7 @@ val is_datatype_rule = String.isPrefix pirate_datatype_rule
 fun is_metitarski_decision_rule rule = (rule = metitarski_decision_rule)
 fun is_metitarski_resolution_rule rule = (rule = metitarski_resolution_rule)
 fun is_metitarski_canonicalize_rule rule = (rule = metitarski_canonicalize_rule)
+fun is_metitarski_arithmetic_rule rule = (rule = metitarski_arithmetic_rule)
 
 fun raw_label_of_num num = (num, 0)
 
@@ -199,8 +201,11 @@ fun add_lines_pass2 res [] = rev res
           (role = Plain andalso not (is_skolemize_rule rule) andalso
            not (is_ext_rule rule) andalso not (is_arith_rule rule) andalso
            not (is_datatype_rule rule) andalso not (null lines) andalso looks_boring () andalso
-           (*We don't want to eliminate the MT decision steps even if they have only one premise*)
-           not (is_before_skolemize_rule ())) andalso not(is_metitarski_decision_rule rule) then
+           not (is_before_skolemize_rule ()) andalso
+           (*We don't want to eliminate the MT "decision" and "arithmetic" steps 
+             even if they have only one premise*)
+           not (is_metitarski_decision_rule rule) andalso  
+           not (is_metitarski_arithmetic_rule rule)) then
         add_lines_pass2 res (map (replace_dependencies_in_line (name, deps)) lines)
       else
         add_lines_pass2 (line :: res) lines
@@ -227,9 +232,11 @@ val metitarski_decision_methods = [Sos_Method]
 (*We want to try both of these in case there's a substitution step hidden inside.
   Auto sometimes also works for tainted sequents that were inverted 
   (the ones that generate a case split)*)
-val metitarski_resolution_methods = [Metis_Method (NONE, NONE), Auto_Method]
+val metitarski_resolution_methods = [Metis_Method (NONE, NONE), Auto_Method, Blast_Method]
 (*Handle the MT canonicalize steps separately*)
 val metitarski_canonicalize_methods = [Auto_Method]
+(*For MT arithmetic steps*)
+val metitarski_arithmetic_methods = Blast_Method :: basic_simp_based_methods
 
 fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
     (one_line_params as ((used_facts, (_, one_line_play)), banner, subgoal, subgoal_count)) =
@@ -408,6 +415,8 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                        not just the first one. Because moura doesn't work well for MT skolemization.*)
                      else if (not try0) andalso skolem andalso String.isSubstring "metitarski" banner
                        then skolem_methods
+                     (*Handle metotarski arithmetic steps separately*)
+                     else if is_metitarski_arithmetic_rule rule then metitarski_arithmetic_methods
                      else  
                        ((if skolem then skolem_methods
                        else if is_arith_rule rule then arith_methods

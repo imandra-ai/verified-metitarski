@@ -15,6 +15,7 @@ begin
                     \<or> \<not> (lgen r  (x - 1) y)
                     \<or> (lgen r (ln(x)) y)"
     using ln_upper_1
-    by (metis (full_types) lgen.elims(2) lgen.elims(3) not_le order.trans)   
+    by (metis (full_types) lgen.elims(2) lgen.elims(3) not_le order.trans)
+    
 end
   
