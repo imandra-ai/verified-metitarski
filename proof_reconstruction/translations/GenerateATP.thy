@@ -80,7 +80,8 @@ fun isar_proof (st : thm) (ctxt : Proof.context)  =
       val verbose : bool = true
       val alt_metis_args : string option * string option = (NONE, NONE)
       val preplay_timeout : Time.time = Time.fromSeconds 5
-      val compress : real option = NONE
+      val compress : real option = SOME 0.0 (*Turn off proof compression for testing.
+                                              to turn on, use NONE, or a positive number.*)
       val try0 : bool = false (*if true, tries the automated methods before translating the MT proof*)
       val minimize : bool = false
       val atp_proof0 : (term, string) ATP_Proof.atp_step list = termified_atp_proof
@@ -120,6 +121,47 @@ lemma foo: "\<forall>(Y::real).0 <= abs(Y^3)"
   apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
 proof -
   { fix rr :: real
+    have "- (rr * (rr * rr)) < 0 \<or> \<bar>rr * (rr * rr)\<bar> \<noteq> - (rr * (rr * rr)) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
+      by auto (* 4 ms *)
+    then have ff1: "- (rr * (rr * rr)) < 0 \<or> 0 \<le> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
+      using abs_negative by auto (* 8 ms *)
+    have "rr * (rr * rr) < 0 \<or> \<bar>rr * (rr * rr)\<bar> \<noteq> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
+      by auto (* 4 ms *)
+    then have ff2: "rr * (rr * rr) < 0 \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
+      using abs_nonnegative by auto (* 8 ms *)
+    have "\<not> rr * (rr * rr) \<le> 0 \<or> \<not> - (rr * (rr * rr)) < 0"
+      by auto (* 4 ms *)
+    moreover
+    { assume "\<not> - (rr * (rr * rr)) < 0"
+      then have "rr * (rr * rr) < 0 \<longrightarrow> \<not> - (rr * (rr * rr)) < 0 \<and> \<not> 0 \<le> rr * (rr * rr)"
+        by auto (* 8 ms *)
+      moreover
+      { assume "\<not> - (rr * (rr * rr)) < 0 \<and> \<not> 0 \<le> rr * (rr * rr)"
+        then have "\<not> \<bar>rr ^ 3\<bar> < 0"
+          using ff1 by auto (* 44 ms *) }
+      ultimately have "\<not> \<bar>rr ^ 3\<bar> < 0 \<or> \<not> rr * (rr * rr) < 0"
+        by metis (* 8 ms *) }
+    moreover
+    { assume "\<not> rr * (rr * rr) \<le> 0"
+      then have "\<not> rr * (rr * rr) < 0"
+        by sos (* 28 ms *) }
+    ultimately have "\<not> \<bar>rr ^ 3\<bar> < 0 \<or> \<not> rr * (rr * rr) < 0"
+      by metis (* 8 ms *)
+    moreover
+    { assume "\<not> rr * (rr * rr) < 0"
+      then have "\<not> \<bar>rr ^ 3\<bar> < 0"
+        using ff2 by auto (* 20 ms *) }
+    ultimately have "\<not> \<bar>rr ^ 3\<bar> < 0"
+      by metis (* 8 ms *) }
+  then have "\<forall>r. \<not> \<bar>(r::real) ^ 3\<bar> < 0"
+      by moura (* failed *)
+    then show ?thesis
+      by auto (* 20 ms *)
+  qed
+
+
+(*proof -
+  { fix rr :: real
     have 0: "- (rr * (rr * rr)) < 0 \<or> \<bar>rr * (rr * rr)\<bar> \<noteq> - (rr * (rr * rr)) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
       by auto (* 8 ms *)
     then have ff1: "- (rr * (rr * rr)) < 0 \<or> 0 \<le> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
@@ -150,7 +192,7 @@ proof -
     by linarith (*instead of moura*) (* failed *)
   then show ?thesis
     by auto (*instead of metis*) (* failed *)
-qed
+qed*)
     
 (*  ML_prf{**}*)  
     

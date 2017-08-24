@@ -65,7 +65,10 @@ val veriT_tmp_skolemize_rule = "tmp_skolemize"
 val z3_skolemize_rule = Z3_Proof.string_of_rule Z3_Proof.Skolemize
 val z3_th_lemma_rule_prefix = Z3_Proof.string_of_rule (Z3_Proof.Th_Lemma "")
 val zipperposition_cnf_rule = "cnf"
+(*Metitarski methods handled separately*)
 val metitarski_decision_rule = "decision"
+val metitarski_resolution_rule = "resolve"
+val metitarski_canonicalize_rule = "canonicalize"
 
 val skolemize_rules =
   [e_definition_rule, e_skolemize_rule, leo2_extcnf_forall_neg_rule, satallax_skolemize_rule,
@@ -82,6 +85,8 @@ fun is_arith_rule rule =
 val is_datatype_rule = String.isPrefix pirate_datatype_rule
 
 fun is_metitarski_decision_rule rule = (rule = metitarski_decision_rule)
+fun is_metitarski_resolution_rule rule = (rule = metitarski_resolution_rule)
+fun is_metitarski_canonicalize_rule rule = (rule = metitarski_canonicalize_rule)
 
 fun raw_label_of_num num = (num, 0)
 
@@ -90,7 +95,10 @@ fun label_of_clause [(num, _)] = raw_label_of_num num
 
 fun add_global_fact ss = apsnd (union (op =) ss)
 
-(* A list with the names of all the metitarski axioms. Without the Bessel function.*)
+(* A list with the names of all the metitarski axioms. Without the Bessel function.
+  These are encoded in Isabelle as separate lemmas.
+  The list is needed to make sure these facts are not removed from the "using" clauses because 
+  they don't appear anywhere else in the proof.*)
 val metitarski_axioms : string list =
   ["abs_negative", "abs_nonnegative",
    "abs_cases", "abs_pos", "abs_neg",
@@ -213,8 +221,15 @@ val systematic_methods =
   [Metis_Method (SOME full_typesN, NONE), Metis_Method (SOME no_typesN, NONE)]
 val rewrite_methods = basic_simp_based_methods @ basic_systematic_methods @ basic_arith_methods
 val skolem_methods = Moura_Method :: systematic_methods
+
 (*For the metitarski decision steps*)
-val decision_methods = [Sos_Method]
+val metitarski_decision_methods = [Sos_Method]
+(*We want to try both of these in case there's a substitution step hidden inside.
+  Auto sometimes also works for tainted sequents that were inverted 
+  (the ones that generate a case split)*)
+val metitarski_resolution_methods = [Metis_Method (NONE, NONE), Auto_Method]
+(*Handle the MT canonicalize steps separately*)
+val metitarski_canonicalize_methods = [Auto_Method]
 
 fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
     (one_line_params as ((used_facts, (_, one_line_play)), banner, subgoal, subgoal_count)) =
@@ -381,13 +396,24 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                     |> sort_facts
 
                   val meths =
-                    (if skolem then skolem_methods
-                     else if is_arith_rule rule then arith_methods
-                     else if is_datatype_rule rule then datatype_methods
-                     (*Special rules for metitarski decision steps*)
-                     else if is_metitarski_decision_rule rule then decision_methods
-                     else systematic_methods')
-                    |> massage_methods
+                     (*If we are dealing with a resolution step, we don't want to only try metis
+                       but also auto, because there might be substitution steps hidden inside. 
+                       If try0 is false, massage_methods only return the first method 
+                       from the method list given to it.
+                       Auto sometimes also works for tainted sequents that were inverted 
+                       (the ones that generate a case split)*)
+                     if (not try0) andalso (is_metitarski_resolution_rule rule)
+                     then metitarski_resolution_methods
+                     else
+                       ((if skolem then skolem_methods
+                       else if is_arith_rule rule then arith_methods
+                       else if is_datatype_rule rule then datatype_methods
+                       (*Special rules for metitarski decision steps*)
+                       else if is_metitarski_decision_rule rule then metitarski_decision_methods
+                       (*Handle canonicalize steps separately*)
+                       else if is_metitarski_canonicalize_rule rule then metitarski_canonicalize_methods
+                       else systematic_methods')
+                      |> massage_methods)
 
                   fun prove sub facts = Prove (maybe_show outer c, [], l, t, sub, facts, meths, "")
                   fun steps_of_rest step = isar_steps outer (SOME l) (step :: accum) infs
