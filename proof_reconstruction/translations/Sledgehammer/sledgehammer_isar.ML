@@ -232,7 +232,7 @@ val metitarski_decision_methods = [Sos_Method]
 (*We want to try both of these in case there's a substitution step hidden inside.
   Auto sometimes also works for tainted sequents that were inverted 
   (the ones that generate a case split)*)
-val metitarski_resolution_methods = [Metis_Method (NONE, NONE), Auto_Method, Blast_Method]
+val metitarski_resolution_methods = [Metis_Method (NONE, NONE), Blast_Method] @ basic_simp_based_methods
 (*Handle the MT canonicalize steps separately*)
 val metitarski_canonicalize_methods = [Auto_Method]
 (*For MT arithmetic steps*)
