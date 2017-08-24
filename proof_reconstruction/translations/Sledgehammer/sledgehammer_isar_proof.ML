@@ -178,7 +178,6 @@ fun relabel_isar_proof_canonically proof =
             |> fold_map relabel_proof subs
             ||>> next_label l
         in
-          @{print} lfs';
           (Prove (qs, fix, l', t, subs', (lfs', gfs), meths, comment), accum')
         end
       | relabel_step step accum = (step, accum)

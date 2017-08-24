@@ -52,6 +52,7 @@ open String_Redirect
 val trace = Attrib.setup_config_bool @{binding sledgehammer_isar_trace} (K true)
 
 val e_definition_rule = "definition"
+(*The Metitarski skolemization rule is called the same*)
 val e_skolemize_rule = "skolemize"
 val leo2_extcnf_forall_neg_rule = "extcnf_forall_neg"
 val pirate_datatype_rule = "DT"
@@ -64,6 +65,7 @@ val veriT_tmp_skolemize_rule = "tmp_skolemize"
 val z3_skolemize_rule = Z3_Proof.string_of_rule Z3_Proof.Skolemize
 val z3_th_lemma_rule_prefix = Z3_Proof.string_of_rule (Z3_Proof.Th_Lemma "")
 val zipperposition_cnf_rule = "cnf"
+val metitarski_decision_rule = "decision"
 
 val skolemize_rules =
   [e_definition_rule, e_skolemize_rule, leo2_extcnf_forall_neg_rule, satallax_skolemize_rule,
@@ -79,6 +81,8 @@ fun is_arith_rule rule =
   rule = veriT_la_generic_rule
 val is_datatype_rule = String.isPrefix pirate_datatype_rule
 
+fun is_metitarski_decision_rule rule = (rule = metitarski_decision_rule)
+
 fun raw_label_of_num num = (num, 0)
 
 fun label_of_clause [(num, _)] = raw_label_of_num num
@@ -86,7 +90,7 @@ fun label_of_clause [(num, _)] = raw_label_of_num num
 
 fun add_global_fact ss = apsnd (union (op =) ss)
 
-(* A list with the names of all the metitarski axioms. Without the Bessel function. Up to general.ax inclusively.*)
+(* A list with the names of all the metitarski axioms. Without the Bessel function.*)
 val metitarski_axioms : string list =
   ["abs_negative", "abs_nonnegative",
    "abs_cases", "abs_pos", "abs_neg",
@@ -163,7 +167,7 @@ fun add_line_pass1 (line as (name, role, t, rule, [])) lines =
   | add_line_pass1 line lines = line :: lines
 
 fun add_lines_pass2 res [] = rev res
-  | add_lines_pass2 res ((line as (name as (str_name, _), role, t, rule, deps)) :: lines) =
+  | add_lines_pass2 res ((line as (name, role, t, rule, deps)) :: lines) =
     let
       fun normalize role =
         role = Conjecture ? (HOLogic.dest_Trueprop #> s_not #> HOLogic.mk_Trueprop)
@@ -187,7 +191,8 @@ fun add_lines_pass2 res [] = rev res
           (role = Plain andalso not (is_skolemize_rule rule) andalso
            not (is_ext_rule rule) andalso not (is_arith_rule rule) andalso
            not (is_datatype_rule rule) andalso not (null lines) andalso looks_boring () andalso
-           not (is_before_skolemize_rule ())) then
+           (*We don't want to eliminate the MT decision steps even if they have only one premise*)
+           not (is_before_skolemize_rule ())) andalso not(is_metitarski_decision_rule rule) then
         add_lines_pass2 res (map (replace_dependencies_in_line (name, deps)) lines)
       else
         add_lines_pass2 (line :: res) lines
@@ -208,6 +213,8 @@ val systematic_methods =
   [Metis_Method (SOME full_typesN, NONE), Metis_Method (SOME no_typesN, NONE)]
 val rewrite_methods = basic_simp_based_methods @ basic_systematic_methods @ basic_arith_methods
 val skolem_methods = Moura_Method :: systematic_methods
+(*For the metitarski decision steps*)
+val decision_methods = [Sos_Method]
 
 fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
     (one_line_params as ((used_facts, (_, one_line_play)), banner, subgoal, subgoal_count)) =
@@ -366,7 +373,6 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                   val l = label_of_clause c
                   val t = prop_of_clause c
                   val rule = rule_of_clause_id id
-                  val _ = @{print} gamma
                   val skolem = is_skolemize_rule rule
 
                   val deps = ([], [])
@@ -378,6 +384,8 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                     (if skolem then skolem_methods
                      else if is_arith_rule rule then arith_methods
                      else if is_datatype_rule rule then datatype_methods
+                     (*Special rules for metitarski decision steps*)
+                     else if is_metitarski_decision_rule rule then decision_methods
                      else systematic_methods')
                     |> massage_methods
 

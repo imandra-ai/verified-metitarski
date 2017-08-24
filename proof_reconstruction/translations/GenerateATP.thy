@@ -7,9 +7,24 @@ declare[[ML_print_depth=50]]
 
 (*No absolute paths needed because this theory is in the same folder as the ML files.*)  
 ML_file "config.ML"  
-(*ML_file "sledgehammer_isar_proof.ML"*)
-ML_file "sledgehammer_isar.ML"
- 
+  
+(*My copy of the Sledgehammer files. The order these are loaded is important!"*)
+ML_file "Sledgehammer/sledgehammer_util.ML"
+ML_file "Sledgehammer/sledgehammer_fact.ML"   
+ML_file "Sledgehammer/sledgehammer_proof_methods.ML"
+ML_file "Sledgehammer/sledgehammer_isar_proof.ML"
+ML_file "Sledgehammer/sledgehammer_isar_preplay.ML"
+ML_file "Sledgehammer/sledgehammer_isar_compress.ML"  
+ML_file "Sledgehammer/sledgehammer_isar_minimize.ML"  
+ML_file "Sledgehammer/sledgehammer_isar.ML"
+ML_file "Sledgehammer/sledgehammer_prover.ML"
+ML_file "Sledgehammer/sledgehammer_prover_atp.ML"
+ML_file "Sledgehammer/sledgehammer_prover_smt.ML"
+ML_file "Sledgehammer/sledgehammer_prover_minimize.ML"  
+ML_file "Sledgehammer/sledgehammer_mash.ML" 
+ML_file "Sledgehammer/sledgehammer.ML"
+(*ML_file "Sledgehammer/sledgehammer_commands.ML"  *)
+  
 ML_file "thm_to_atp_problem.ML"  
 ML_file "atp_problem_to_tptp.ML"
 ML_file "mt_call.ML"
@@ -136,14 +151,8 @@ proof -
   then show ?thesis
     by auto (*instead of metis*) (* failed *)
 qed
-
-
-  ML_val {* 
-  val st =  Thm.concl_of (#goal @{Isar.goal});
- *}
     
-(*  ML_prf{**}*)
-sorry    
+(*  ML_prf{**}*)  
     
 (*  
 ML\<open>
