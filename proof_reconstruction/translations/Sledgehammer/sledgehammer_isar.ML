@@ -98,7 +98,7 @@ fun add_global_fact ss = apsnd (union (op =) ss)
 (* A list with the names of all the metitarski axioms. Without the Bessel function.
   These are encoded in Isabelle as separate lemmas.
   The list is needed to make sure these facts are not removed from the "using" clauses because 
-  they don't appear anywhere else in the proof.*)
+  they don't appear anywhere else in the proof. Should find a better way to do this.*)
 val metitarski_axioms : string list =
   ["abs_negative", "abs_nonnegative",
    "abs_cases", "abs_pos", "abs_neg",
@@ -403,8 +403,12 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                        Auto sometimes also works for tainted sequents that were inverted 
                        (the ones that generate a case split)*)
                      if (not try0) andalso (is_metitarski_resolution_rule rule)
-                     then metitarski_resolution_methods
-                     else
+                       then metitarski_resolution_methods
+                     (*If this is a metitarski skolemize step then try all known skolemization rules,
+                       not just the first one. Because moura doesn't work well for MT skolemization.*)
+                     else if (not try0) andalso skolem andalso String.isSubstring "metitarski" banner
+                       then skolem_methods
+                     else  
                        ((if skolem then skolem_methods
                        else if is_arith_rule rule then arith_methods
                        else if is_datatype_rule rule then datatype_methods

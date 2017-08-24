@@ -92,7 +92,8 @@ fun isar_proof (st : thm) (ctxt : Proof.context)  =
       val used_facts : (string * Sledgehammer_Isar.stature) list = []
       val preplay : Sledgehammer_Proof_Methods.proof_method = Sledgehammer_Proof_Methods.Auto_Method  (*?*)
       val one_line_play : Sledgehammer_Proof_Methods.play_outcome = Sledgehammer_Proof_Methods.Played Time.zeroTime  (*?*)
-      val banner : string = ""
+      val banner : string = "metitarski"  (*This is now also needed in selecting proof methods. 
+                                            It must contain the work metitarski*)
       val subgoal : int = 1
       val subgoal_count : int = 1
     val one_line_params : Sledgehammer_Isar.one_line_params =
