@@ -4,7 +4,8 @@ theory GenerateATP
     Real 
     Transcendental 
     "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsAbs" 
-    "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsGeneral" 
+    "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsGeneral"
+    "~/Documents/internship/verified-metitarski/isabelle-proofs/LnBounds"
     "~~/src/HOL/Library/Sum_of_Squares"
 begin
   
