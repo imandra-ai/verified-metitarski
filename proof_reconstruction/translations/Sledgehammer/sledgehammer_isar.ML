@@ -70,6 +70,7 @@ val metitarski_decision_rule = "decision"
 val metitarski_resolution_rule = "resolve"
 val metitarski_canonicalize_rule = "canonicalize"
 val metitarski_arithmetic_rule = "arithmetic"
+val metitarski_conjunct_rule = "conjunct"
 
 val skolemize_rules =
   [e_definition_rule, e_skolemize_rule, leo2_extcnf_forall_neg_rule, satallax_skolemize_rule,
@@ -89,6 +90,7 @@ fun is_metitarski_decision_rule rule = (rule = metitarski_decision_rule)
 fun is_metitarski_resolution_rule rule = (rule = metitarski_resolution_rule)
 fun is_metitarski_canonicalize_rule rule = (rule = metitarski_canonicalize_rule)
 fun is_metitarski_arithmetic_rule rule = (rule = metitarski_arithmetic_rule)
+fun is_metitarski_conjunct_rule rule = (rule = metitarski_conjunct_rule)
 
 fun raw_label_of_num num = (num, 0)
 
@@ -203,9 +205,12 @@ fun add_lines_pass2 res [] = rev res
            not (is_datatype_rule rule) andalso not (null lines) andalso looks_boring () andalso
            not (is_before_skolemize_rule ()) andalso
            (*We don't want to eliminate the MT "decision" and "arithmetic" steps 
-             even if they have only one premise*)
+             even if they have only one premise.
+             Neither the "conjunct" step. Otherwise special function might be given to the 
+             RCF procedure by mistake.*)
            not (is_metitarski_decision_rule rule) andalso  
-           not (is_metitarski_arithmetic_rule rule)) then
+           not (is_metitarski_arithmetic_rule rule) andalso
+           not (is_metitarski_conjunct_rule rule)) then
         add_lines_pass2 res (map (replace_dependencies_in_line (name, deps)) lines)
       else
         add_lines_pass2 (line :: res) lines

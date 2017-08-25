@@ -4,8 +4,8 @@ begin
 
 fun lgen :: "bool \<Rightarrow> real \<Rightarrow> real \<Rightarrow> bool" where
   "lgen False x y = (x\<le>y)"
- |"lgen True x y = (x<y)"
- 
+ |"lgen True x y = (x<y)"  
+   
 fun interval :: "bool \<Rightarrow> real \<Rightarrow> bool \<Rightarrow> real \<Rightarrow> real \<Rightarrow> bool" where
   "interval False a False b x = (a\<le>x \<and> x\<le>b)"
  |"interval False a True b x = (a\<le>x \<and> x<b)"
