@@ -240,6 +240,10 @@ lemma ff4: "(- 1 + (X_000050::real)) / X_000050 < X_000051 \<or> X_000050 \<le> 
   apply(atomize)
   apply(blast)  
 *)  
+  
+lemma ff4_lemm: "(- 1 + X_000050) / X_000050 < X_000051 \<or> X_000050 \<le> 0 \<or> X_000051 \<le> ln X_000050"
+  sorry  
+  
 lemma foo4: "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X^2)"
   apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
 proof -
@@ -269,7 +273,7 @@ proof -
       moreover
       { assume "\<not> 0 < rr * (rr * (rr * - 1)) \<and> \<not> rr \<le> - 1"
         then have "\<not> rr < rr * (1 + rr * - 1) * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
-          by blast (* failed *) (* "arithmetic" *)
+          by (* failed *) (* "arithmetic" *)
         then have "\<not> rr / (1 + rr) < rr * (1 + rr * - 1)"
           using leq_right_divide_mul_pos by fastforce (* 52 ms *)
         then have "ln (1 + rr) < rr \<longrightarrow> \<not> rr / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> ln (1 + rr)"
@@ -312,8 +316,11 @@ proof -
             { assume "\<not> rr / (1 + rr) < rr \<and> \<not> rr \<le> - 1"
               then have "\<not> (- 1 + (1 + rr)) / (1 + rr) < rr \<and> \<not> 1 + rr \<le> 0"
                 by auto (* 4 ms *)
+              have "(-1 + (1 + rr)) / (1 + rr) < rr* (1 + rr * -1) |
+     rr * (1 + rr * -1) <= ln(1 + rr) | 1 + rr <= 0"
+                using ff4 by blast
               then have "\<not> ln (1 + rr) < rr"
-                using ff4 by metis (* failed *) }
+                using  ff4 by auto (* failed *) }
             ultimately have "\<not> ln (1 + rr) < rr \<or> \<not> - 1 < rr"
               by metis (* 4 ms *) }
           moreover
@@ -381,137 +388,8 @@ proof -
   then show ?thesis
     by auto (* 896 ms *)
 qed
-proof -
-  { fix rr :: real
-    have "rr * rr < rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<noteq> rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
-      by auto (* 12 ms *)
-    then have ff1: "rr * - 1 + ln (1 + rr) < 0 \<or> rr * rr < rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
-      using abs_nonnegative by blast (* 4 ms *)
-    have "\<not> lgen False (X_000043 - 1) X_000044 \<or> X_000043 \<le> 0 \<or> ln X_000043 \<le> X_000044"
-      using lgen_le_neg ln_upper_bound_cf1 by blast (* 8 ms *)
-    then have ff2: "X_000044 < - 1 + X_000043 \<or> X_000043 \<le> 0 \<or> ln X_000043 \<le> X_000044"
-      by auto (* 4 ms *)
-    have "rr * rr < - (rr * - 1 + ln (1 + rr)) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<noteq> - (rr * - 1 + ln (1 + rr)) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
-      by auto (* 12 ms *)
-    then have ff3: "rr * rr < - (rr * - 1 + ln (1 + rr)) \<or> 0 \<le> rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
-      using abs_negative by blast (* 0.0 ms *)
-    have "\<not> lgen False X_000051 ((X_000050 - 1) / X_000050) \<or> X_000050 \<le> 0 \<or> X_000051 \<le> ln X_000050"
-      using lgen_le_neg ln_lower_bound_cf1 by blast (* 8 ms *)
-    then have ff4: "(- 1 + X_000050) / X_000050 < X_000051 \<or> X_000050 \<le> 0 \<or> X_000051 \<le> ln X_000050"
-      by auto (* 4 ms *)
-    have "\<not> rr \<le> - 1 \<or> \<not> - 1 < rr"
-      by simp (* 0.0 ms *)
-    moreover
-    { assume "\<not> rr \<le> - 1"
-      then have "\<not> rr * (rr * (rr * - 1)) \<le> 0 \<and> \<not> rr \<le> - 1 \<or> \<not> 0 < rr * (rr * (rr * - 1)) \<and> \<not> rr \<le> - 1"
-        by auto (* 4 ms *)
-      moreover
-      { assume "\<not> 0 < rr * (rr * (rr * - 1)) \<and> \<not> rr \<le> - 1"
-        then have "\<not> rr < rr * (1 + rr * - 1) * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
-          by blast (* failed *) (*"arithmetic" step*)
-        then have "\<not> rr / (1 + rr) < rr * (1 + rr * - 1)"
-          using leq_right_divide_mul_pos by fastforce (* 56 ms *)
-        then have "ln (1 + rr) < rr \<longrightarrow> \<not> rr / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> ln (1 + rr)"
-          by auto (* 4 ms *)
-        moreover
-        { assume "\<not> rr / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> ln (1 + rr)"
-          then have "- 1 < rr \<longrightarrow> \<not> rr / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> - 1 \<and> \<not> rr \<le> ln (1 + rr)"
-            by auto (* 4 ms *)
-          moreover
-          { assume "\<not> rr / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> - 1 \<and> \<not> rr \<le> ln (1 + rr)"
-            then have "\<not> (- 1 + (1 + rr)) / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> 1 + rr \<le> 0 \<and> \<not> rr \<le> ln (1 + rr)"
-              by simp (* 4 ms *)
-            then have "\<not> ln (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> ln (1 + rr)"
-              using ff4 by force (* > 5.0 s, timed out *)
-            then have "\<not> rr * rr < - (rr * - 1 + ln (1 + rr)) \<and> \<not> 0 \<le> rr * - 1 + ln (1 + rr)"
-              by blast (* failed *) (*"arithmetic"*)
-            then have "\<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-              using ff3 by simp (* 12 ms *) }
-          ultimately have "\<not> - 1 < rr \<or> \<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-            by metis (* 8 ms *) }
-        ultimately have "\<not> ln (1 + rr) < rr \<or> \<not> - 1 < rr \<or> \<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-          by metis (* 8 ms *) }
-      moreover
-      { assume "\<not> rr * (rr * (rr * - 1)) \<le> 0 \<and> \<not> rr \<le> - 1"
-        then have "0 < rr * rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-          by sos (* failed *)
-        moreover
-        { assume "\<not> 0 < rr * rr"
-          then have "\<not> 0 < rr * rr \<and> \<not> - 1 < rr \<or> \<not> 0 < rr * rr \<and> \<not> rr \<le> - 1"
-            by simp (* 0.0 ms *)
-          moreover
-          { assume "\<not> 0 < rr * rr \<and> \<not> rr \<le> - 1"
-            then have "\<not> rr < rr * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
-              by auto (* 0.0 ms *)
-            then have "\<not> rr / (1 + rr) < rr"
-              using leq_right_divide_mul_pos by fastforce (* 48 ms *)
-            then have "- 1 < rr \<longrightarrow> \<not> rr / (1 + rr) < rr \<and> \<not> rr \<le> - 1"
-              by auto (* 4 ms *)
-            moreover
-            { assume "\<not> rr / (1 + rr) < rr \<and> \<not> rr \<le> - 1"
-              then have "\<not> (- 1 + (1 + rr)) / (1 + rr) < rr \<and> \<not> 1 + rr \<le> 0"
-                by auto (* 4 ms *)
-              then have "\<not> ln (1 + rr) < rr"
-                using ff4 by metis (* failed *) }
-            ultimately have "\<not> ln (1 + rr) < rr \<or> \<not> - 1 < rr"
-              by metis (* 4 ms *) }
-          moreover
-          { assume "\<not> 0 < rr * rr \<and> \<not> - 1 < rr"
-            then have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-              by sos (* failed *) }
-          ultimately have "- 1 < rr \<and> ln (1 + rr) < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-            by metis (* 4 ms *) }
-        ultimately have "- 1 < rr \<and> ln (1 + rr) < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-          by metis (* 8 ms *) }
-      ultimately have "rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar> \<and> - 1 < rr \<and> ln (1 + rr) < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-        by metis (* 12 ms *)
-      moreover
-      { assume "\<not> ln (1 + rr) < rr"
-        then have "- 1 < rr \<longrightarrow> \<not> ln (1 + rr) < rr \<and> \<not> rr \<le> - 1"
-          by auto (* 4 ms *)
-        moreover
-        { assume "\<not> ln (1 + rr) < rr \<and> \<not> rr \<le> - 1"
-          then have "\<not> rr * (rr * - 1) \<le> 0 \<and> \<not> rr \<le> - 1 \<or> \<not> 0 < rr * (rr * - 1) \<and> \<not> ln (1 + rr) < rr \<and> \<not> rr \<le> - 1"
-            by auto (* 0.0 ms *)
-          moreover
-          { assume "\<not> 0 < rr * (rr * - 1) \<and> \<not> ln (1 + rr) < rr \<and> \<not> rr \<le> - 1"
-            then have "\<not> rr * (1 + rr) < - 1 + (1 + rr) \<and> \<not> ln (1 + rr) < rr \<and> \<not> 1 + rr \<le> 0"
-              by blast (* failed *)
-            then have "\<not> rr * (1 + rr) < ln (1 + rr) \<and> \<not> ln (1 + rr) < rr"
-              using ff2 by metis (* failed *)
-            then have "\<not> rr * - 1 + ln (1 + rr) < 0 \<and> \<not> rr * rr < rr * - 1 + ln (1 + rr)"
-              by blast (* failed *)
-            then have "\<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-              using ff1 by auto (* 36 ms *) }
-          moreover
-          { assume "\<not> rr * (rr * - 1) \<le> 0 \<and> \<not> rr \<le> - 1"
-            then have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-              by sos (* failed *) }
-          ultimately have "rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar> \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-            by metis (* 12 ms *) }
-        ultimately have "rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar> \<and> - 1 < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-          by metis (* 8 ms *) }
-      ultimately have "rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar> \<and> - 1 < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-        by metis (* 8 ms *)
-      moreover
-      { assume "\<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-        then have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-          by blast (* failed *) }
-      ultimately have "- 1 < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-        by metis (* 8 ms *) }
-    ultimately have "- 1 < rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-      by metis (* 8 ms *)
-    moreover
-    { assume "\<not> - 1 < rr"
-      then have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-        by sos (* failed *) }
-    ultimately have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-      by metis (* 8 ms *) }
-  then have "\<forall>r. \<not> (r::real)\<^sup>2 < \<bar>ln (1 + r) - r\<bar> \<or> \<not> 0 \<le> r"
-    by blast (* 0.0 ms *)
-  then show ?thesis
-    by auto (* 944 ms *)
-qed  
+
+
   
 (*  ML_prf{**}*)    
   

@@ -3,7 +3,7 @@
   These will hopefully be picked up by automated proof methods in Isar proofs.*)
 
 theory Arithmetic
-  imports Main Real
+  imports Main Real AxiomsGeneral
 begin
   
 section\<open>Rewritings introduced by MT pretty printing\<close>  
@@ -14,6 +14,14 @@ lemma not_less [intro]:
   
 lemma not_less_eq [intro]: "\<not> y \<le> (x::real) \<Longrightarrow> x < y"
   by auto
+
+section\<open>Arithmetic simplification performed by MT ``arithmetic''\<close>
+  
+lemma lgen_elim1 [elim]: "lgen False s t \<Longrightarrow> s\<le>t"
+  by auto  
+    
+lemma lgen_elim2 [elim]: "lgen True s t \<Longrightarrow> \<not> t\<le>s"
+  by auto    
     
 (*lemma "1 + (x::real) \<le> 0 \<Longrightarrow> x \<le> -1"
   by simp*)

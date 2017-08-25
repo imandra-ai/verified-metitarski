@@ -71,6 +71,7 @@ val metitarski_resolution_rule = "resolve"
 val metitarski_canonicalize_rule = "canonicalize"
 val metitarski_arithmetic_rule = "arithmetic"
 val metitarski_conjunct_rule = "conjunct"
+val metitarski_subst_rule = "subst"
 
 val skolemize_rules =
   [e_definition_rule, e_skolemize_rule, leo2_extcnf_forall_neg_rule, satallax_skolemize_rule,
@@ -91,6 +92,7 @@ fun is_metitarski_resolution_rule rule = (rule = metitarski_resolution_rule)
 fun is_metitarski_canonicalize_rule rule = (rule = metitarski_canonicalize_rule)
 fun is_metitarski_arithmetic_rule rule = (rule = metitarski_arithmetic_rule)
 fun is_metitarski_conjunct_rule rule = (rule = metitarski_conjunct_rule)
+fun is_metitarski_subst_rule rule = (rule = metitarski_subst_rule)
 
 fun raw_label_of_num num = (num, 0)
 
@@ -207,10 +209,13 @@ fun add_lines_pass2 res [] = rev res
            (*We don't want to eliminate the MT "decision" and "arithmetic" steps 
              even if they have only one premise.
              Neither the "conjunct" step. Otherwise special function might be given to the 
-             RCF procedure by mistake.*)
+             RCF procedure by mistake.
+             "Subst" steps need to be handled separately in case they are instantiating 
+             a MT free variable.*)
            not (is_metitarski_decision_rule rule) andalso  
            not (is_metitarski_arithmetic_rule rule) andalso
-           not (is_metitarski_conjunct_rule rule)) then
+           not (is_metitarski_conjunct_rule rule) (*andalso 
+           not (is_metitarski_subst_rule rule)*) )then
         add_lines_pass2 res (map (replace_dependencies_in_line (name, deps)) lines)
       else
         add_lines_pass2 (line :: res) lines
@@ -242,6 +247,8 @@ val metitarski_resolution_methods = [Metis_Method (NONE, NONE), Blast_Method] @ 
 val metitarski_canonicalize_methods = [Auto_Method]
 (*For MT arithmetic steps*)
 val metitarski_arithmetic_methods = Blast_Method :: basic_simp_based_methods
+(*For subst steps*)
+val metitarski_subst_methods = [Auto_Method]
 
 fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
     (one_line_params as ((used_facts, (_, one_line_play)), banner, subgoal, subgoal_count)) =
@@ -420,7 +427,7 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                        not just the first one. Because moura doesn't work well for MT skolemization.*)
                      else if (not try0) andalso skolem andalso String.isSubstring "metitarski" banner
                        then skolem_methods
-                     (*Handle metotarski arithmetic steps separately*)
+                     (*Handle metitarski arithmetic steps separately*)
                      else if is_metitarski_arithmetic_rule rule then metitarski_arithmetic_methods
                      else  
                        ((if skolem then skolem_methods
@@ -430,6 +437,8 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                        else if is_metitarski_decision_rule rule then metitarski_decision_methods
                        (*Handle canonicalize steps separately*)
                        else if is_metitarski_canonicalize_rule rule then metitarski_canonicalize_methods
+                       (*For subst steps*)
+                       else if is_metitarski_subst_rule rule then metitarski_subst_methods
                        else systematic_methods')
                       |> massage_methods)
 
