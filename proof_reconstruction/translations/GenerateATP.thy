@@ -245,7 +245,7 @@ lemma ff4_lemm: "(- 1 + X_000050) / X_000050 < X_000051 \<or> X_000050 \<le> 0 \
   sorry  
   
 lemma foo4: "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X^2)"
-  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+(*  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})*)
 proof -
   { fix rr :: real
     have "rr * rr < rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<noteq> rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
@@ -271,9 +271,12 @@ proof -
       then have "\<not> rr * (rr * (rr * - 1)) \<le> 0 \<and> \<not> rr \<le> - 1 \<or> \<not> 0 < rr * (rr * (rr * - 1)) \<and> \<not> rr \<le> - 1"
         by auto (* 4 ms *)
       moreover
-      { assume "\<not> 0 < rr * (rr * (rr * - 1)) \<and> \<not> rr \<le> - 1"
+      { (*assume "\<not> rr < rr * (1 + rr * - 1) * (1 + rr)" 
+        then have "\<not> 0 < rr * (rr * (rr * - 1))"
+         try*)
+        assume "\<not> 0 < rr * (rr * (rr * - 1)) \<and> \<not> rr \<le> - 1"
         then have "\<not> rr < rr * (1 + rr * - 1) * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
-          by (* failed *) (* "arithmetic" *)
+          sledgehammer (* failed *) (* "arithmetic" *)
         then have "\<not> rr / (1 + rr) < rr * (1 + rr * - 1)"
           using leq_right_divide_mul_pos by fastforce (* 52 ms *)
         then have "ln (1 + rr) < rr \<longrightarrow> \<not> rr / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> ln (1 + rr)"
@@ -287,7 +290,7 @@ proof -
             then have "\<not> (- 1 + (1 + rr)) / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> 1 + rr \<le> 0 \<and> \<not> rr \<le> ln (1 + rr)"
               by auto (* 4 ms *)
             then have "\<not> ln (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> ln (1 + rr)"
-              using ff4 by force (* > 5.0 s, timed out *) (* not sure why this doesn't work *)
+              using ff4 by fastforce (* > 5.0 s, timed out *) (* works with ff4_lemm instead of ff4 *)
             then have "\<not> rr * rr < - (rr * - 1 + ln (1 + rr)) \<and> \<not> 0 \<le> rr * - 1 + ln (1 + rr)"
               by blast (* failed *) (* "arithmetic" *)
             then have "\<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
