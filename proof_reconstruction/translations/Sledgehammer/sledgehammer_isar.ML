@@ -246,7 +246,7 @@ val metitarski_resolution_methods = [Metis_Method (NONE, NONE), Blast_Method] @ 
 (*Handle the MT canonicalize steps separately*)
 val metitarski_canonicalize_methods = [Auto_Method]
 (*For MT arithmetic steps*)
-val metitarski_arithmetic_methods = Blast_Method :: basic_simp_based_methods
+val metitarski_arithmetic_methods = [Simp_Method, Auto_Method]
 (*For subst steps*)
 val metitarski_subst_methods = [Auto_Method]
 
@@ -412,6 +412,8 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                   val deps = ([], [])
                     |> fold add_fact_of_dependency gamma
                     |> is_maybe_ext_rule rule ? add_global_fact [short_thm_name ctxt ext]
+                    (*If this is an arithmetic step, add algebra_simps to the simplifier*)
+                    |> is_metitarski_arithmetic_rule rule ? add_global_fact ["algebra_simps"]
                     |> sort_facts
 
                   val meths =
