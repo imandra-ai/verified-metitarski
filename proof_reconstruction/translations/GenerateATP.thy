@@ -65,10 +65,12 @@ fun isar_proof (st : thm) (ctxt : Proof.context)  =
       conjecture thm_name;       
     (*Create tptp string with the problem*)  
     val tptp_problem = ATP_Problem_to_tptp.atp_problem_to_tptp atp_problem;
-    
+    val _ = @{print} tptp_problem    
+
     (*Give it to Metitarski*)  
     (*mt_path comes from config.ML*)
     val tptp_proof = Call_Metitarski.call_mt MT_Config.mt_path MT_Config.problem_path tptp_problem
+    val _ = @{print} tptp_proof
 
     (*Read the tptp proof into an ATP_Proof*)  
     val atp_proof = TPTP_Proof_to_atp_proof.tptp_proof_to_atp_proof atp_problem tptp_proof
@@ -97,7 +99,7 @@ fun isar_proof (st : thm) (ctxt : Proof.context)  =
     val isar_params : unit ->Sledgehammer_Isar.isar_params = 
       fn () => (verbose, alt_metis_args, preplay_timeout, compress, try0, minimize, atp_proof0, goal)
     
-      val used_facts : (string * Sledgehammer_Isar.stature) list = [("Groups.algebra_simps", (ATP_Problem_Generate.Global, ATP_Problem_Generate.Simp))] (*Only affects the one-line proof we're not using*)
+      val used_facts : (string * Sledgehammer_Isar.stature) list = [] (*Only affects the one-line proof we're not using*)
       val preplay : Sledgehammer_Proof_Methods.proof_method = Sledgehammer_Proof_Methods.Auto_Method  (*?*)
       val one_line_play : Sledgehammer_Proof_Methods.play_outcome = Sledgehammer_Proof_Methods.Played Time.zeroTime  (*?*)
       val banner : string = "metitarski"  (*This is now also needed in selecting proof methods. 
@@ -240,164 +242,12 @@ lemma ff4: "(- 1 + (X_000050::real)) / X_000050 < X_000051 \<or> X_000050 \<le> 
   apply(atomize)
   apply(blast)  
 *)  
+
+(* Making a custom MT simpset*)  
+named_theorems metitarski_simps "arithmetic simplification rules used by Metitarski"
+ 
+declare power2_eq_square[metitarski_simps]    
   
-lemma ff4_lemm: "(- 1 + X_000050) / X_000050 < X_000051 \<or> X_000050 \<le> 0 \<or> X_000051 \<le> ln X_000050"
-  sorry     
-
-lemma "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X^2)"
-proof -
-  {
-    fix rr :: real
-    assume "\<not> 0 < rr * (rr * (rr * - 1)) \<and> \<not> rr \<le> - 1"
-    then have "\<not> rr < rr * (1 + rr * - 1) * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
-      by (smt mult.assoc mult.commute semiring_normalization_rules(2))
-
-  }
-  then show ?thesis
-     sorry
- qed
-    
-lemma foo4: "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X^2)"
-  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
-proof -
-  { fix rr :: real
-    have "rr * rr < rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<noteq> rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
-      by auto (* 12 ms *)
-    then have ff1: "rr * - 1 + ln (1 + rr) < 0 \<or> rr * rr < rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
-      using abs_nonnegative by blast (* 0.0 ms *)
-    have "\<not> lgen False (X_000043 - 1) X_000044 \<or> X_000043 \<le> 0 \<or> ln X_000043 \<le> X_000044"
-      using lgen_le_neg ln_upper_bound_cf1 by blast (* 16 ms *)
-    then have ff2: "X_000044 < - 1 + X_000043 \<or> X_000043 \<le> 0 \<or> ln X_000043 \<le> X_000044"
-      using algebra_simps by auto (* 72 ms *)
-    have "rr * rr < - (rr * - 1 + ln (1 + rr)) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<noteq> - (rr * - 1 + ln (1 + rr)) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
-      by auto (* 16 ms *)
-    then have ff3: "rr * rr < - (rr * - 1 + ln (1 + rr)) \<or> 0 \<le> rr * - 1 + ln (1 + rr) \<or> \<bar>rr * - 1 + ln (1 + rr)\<bar> \<le> rr * rr"
-      using abs_negative by blast (* 0.0 ms *)
-    have "\<not> lgen False X_000051 ((X_000050 - 1) / X_000050) \<or> X_000050 \<le> 0 \<or> X_000051 \<le> ln X_000050"
-      using lgen_le_neg ln_lower_bound_cf1 by blast (* 4 ms *)
-    then have ff4: "(- 1 + X_000050) / X_000050 < X_000051 \<or> X_000050 \<le> 0 \<or> X_000051 \<le> ln X_000050"
-      using algebra_simps by auto (* 92 ms *)
-    have "\<not> rr \<le> - 1 \<or> \<not> - 1 < rr"
-      by simp (* 4 ms *)
-    moreover
-    { assume "\<not> rr \<le> - 1"
-      then have "\<not> rr * (rr * (rr * - 1)) \<le> 0 \<and> \<not> rr \<le> - 1 \<or> \<not> 0 < rr * (rr * (rr * - 1)) \<and> \<not> rr \<le> - 1"
-        by simp (* 8 ms *)
-      moreover
-      { assume "\<not> 0 < rr * (rr * (rr * - 1)) \<and> \<not> rr \<le> - 1"
-        then have "\<not> rr < rr * (1 + rr * - 1) * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
-          by (simp add: algebra_simps) (* 8 ms *)
-        then have "\<not> rr / (1 + rr) < rr * (1 + rr * - 1)"
-          using leq_right_divide_mul_pos by fastforce (* 140 ms *)
-        then have "ln (1 + rr) < rr \<longrightarrow> \<not> rr / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> ln (1 + rr)"
-          by auto (* 8 ms *)
-        moreover
-        { assume "\<not> rr / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> ln (1 + rr)"
-          then have "- 1 < rr \<longrightarrow> \<not> rr / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> - 1 \<and> \<not> rr \<le> ln (1 + rr)"
-            by simp (* 8 ms *)
-          moreover
-          { assume "\<not> rr / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> - 1 \<and> \<not> rr \<le> ln (1 + rr)"
-            then have "\<not> (- 1 + (1 + rr)) / (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> 1 + rr \<le> 0 \<and> \<not> rr \<le> ln (1 + rr)"
-              by (simp add: algebra_simps) (* 16 ms *)
-            then have "\<not> ln (1 + rr) < rr * (1 + rr * - 1) \<and> \<not> rr \<le> ln (1 + rr)"
-              using ff4 by force (* > 5.0 s, timed out *)
-            then have "\<not> rr * rr < - (rr * - 1 + ln (1 + rr)) \<and> \<not> 0 \<le> rr * - 1 + ln (1 + rr)"
-              by (simp add: algebra_simps) (* 4 ms *)
-            then have "\<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-              using ff3 by auto (* 16 ms *) }
-          ultimately have "\<not> - 1 < rr \<or> \<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-            by metis (* 12 ms *) }
-        ultimately have "\<not> ln (1 + rr) < rr \<or> \<not> - 1 < rr \<or> \<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-          by metis (* 8 ms *) }
-      moreover
-      { assume "\<not> rr * (rr * (rr * - 1)) \<le> 0 \<and> \<not> rr \<le> - 1"
-        then have "\<not> 0 \<le> rr \<or> \<not> 0 < rr * rr"
-          by sos (* 32 ms *)
-        moreover
-        { assume "\<not> 0 < rr * rr"
-          then have "\<not> 0 < rr * rr \<and> \<not> - 1 < rr \<or> \<not> 0 < rr * rr \<and> \<not> rr \<le> - 1"
-            by auto (* 0.0 ms *)
-          moreover
-          { assume "\<not> 0 < rr * rr \<and> \<not> rr \<le> - 1"
-            then have "\<not> rr < rr * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
-              by (simp add: algebra_simps) (* 4 ms *)
-            then have "\<not> rr / (1 + rr) < rr"
-              using leq_right_divide_mul_pos by fastforce (* 112 ms *)
-            then have "- 1 < rr \<longrightarrow> \<not> rr / (1 + rr) < rr \<and> \<not> rr \<le> - 1"
-              by auto (* 4 ms *)
-            moreover
-            { assume "\<not> rr / (1 + rr) < rr \<and> \<not> rr \<le> - 1"
-              then have "\<not> (- 1 + (1 + rr)) / (1 + rr) < rr \<and> \<not> 1 + rr \<le> 0"
-                by (simp add: algebra_simps) (* 12 ms *)
-              then have "\<not> ln (1 + rr) < rr"
-                using ff4 by metis (* failed *) }
-            ultimately have "\<not> ln (1 + rr) < rr \<or> \<not> - 1 < rr"
-            by metis (* 4 ms *) }
-        moreover
-        { assume "\<not> 0 < rr * rr \<and> \<not> - 1 < rr"
-          then have "\<not> 0 \<le> rr"
-            by sos (* 8 ms *) }
-        ultimately have "\<not> 0 \<le> rr \<or> \<not> ln (1 + rr) < rr \<or> \<not> - 1 < rr"
-          by metis (* 4 ms *) }
-      ultimately have "\<not> 0 \<le> rr \<or> \<not> ln (1 + rr) < rr \<or> \<not> - 1 < rr"
-        by metis (* 4 ms *) }
-    ultimately have "\<not> 0 \<le> rr \<or> \<not> ln (1 + rr) < rr \<or> \<not> - 1 < rr \<or> \<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-      by metis (* 12 ms *)
-    moreover
-    { assume "\<not> ln (1 + rr) < rr"
-      then have "- 1 < rr \<longrightarrow> \<not> ln (1 + rr) < rr \<and> \<not> rr \<le> - 1"
-        by auto (* 4 ms *)
-      moreover
-      { assume "\<not> ln (1 + rr) < rr \<and> \<not> rr \<le> - 1"
-        then have "\<not> rr * (rr * - 1) \<le> 0 \<and> \<not> rr \<le> - 1 \<or> \<not> 0 < rr * (rr * - 1) \<and> \<not> ln (1 + rr) < rr \<and> \<not> rr \<le> - 1"
-          by simp (* 0.0 ms *)
-        moreover
-        { assume "\<not> 0 < rr * (rr * - 1) \<and> \<not> ln (1 + rr) < rr \<and> \<not> rr \<le> - 1"
-          then have "\<not> rr * (1 + rr) < - 1 + (1 + rr) \<and> \<not> ln (1 + rr) < rr \<and> \<not> 1 + rr \<le> 0"
-            by (simp add: algebra_simps) (* 4 ms *)
-          then have "\<not> rr * (1 + rr) < ln (1 + rr) \<and> \<not> ln (1 + rr) < rr"
-            using ff2 by metis (* failed *)
-          then have "\<not> rr * - 1 + ln (1 + rr) < 0 \<and> \<not> rr * rr < rr * - 1 + ln (1 + rr)"
-            by (simp add: algebra_simps) (* 4 ms *)
-          then have "\<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-            using ff1 by auto (* 24 ms *) }
-        moreover
-        { assume "\<not> rr * (rr * - 1) \<le> 0 \<and> \<not> rr \<le> - 1"
-          then have "\<not> 0 \<le> rr"
-            by sos (* 16 ms *) }
-        ultimately have "\<not> 0 \<le> rr \<or> \<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-          by metis (* 28 ms *) }
-      ultimately have "\<not> 0 \<le> rr \<or> \<not> - 1 < rr \<or> \<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-        by metis (* 12 ms *) }
-    ultimately have "\<not> 0 \<le> rr \<or> \<not> - 1 < rr \<or> \<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-      by metis (* 16 ms *)
-    moreover
-    { assume "\<not> rr * rr < \<bar>rr * - 1 + ln (1 + rr)\<bar>"
-      then have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar>"
-        by (simp add: algebra_simps) (* failed *)
-      then have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-        by metis (* 4 ms *) }
-    ultimately have "- 1 < rr \<and> 0 \<le> rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-      by metis (* 12 ms *) }
-  ultimately have "- 1 < rr \<and> 0 \<le> rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-    by metis (* 12 ms *)
-  moreover
-  { assume "\<not> - 1 < rr"
-    then have "\<not> 0 \<le> rr"
-      by sos (* 24 ms *) }
-  ultimately have "0 \<le> rr \<longrightarrow> \<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-    by metis (* 12 ms *)
-  moreover
-  { assume "\<not> 0 \<le> rr"
-    then have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-      by metis (* 8 ms *) }
-  ultimately have "\<not> rr\<^sup>2 < \<bar>ln (1 + rr) - rr\<bar> \<or> \<not> 0 \<le> rr"
-    by metis (* 8 ms *) }
-  then have "\<forall>r. \<not> (r::real)\<^sup>2 < \<bar>ln (1 + r) - r\<bar> \<or> \<not> 0 \<le> r"
-    by blast (* 0.0 ms *)
-  then show ?thesis
-    by auto (* 2.0 s *)
-qed
 
   
 (*  ML_prf{**}*)    

@@ -413,7 +413,7 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                     |> fold add_fact_of_dependency gamma
                     |> is_maybe_ext_rule rule ? add_global_fact [short_thm_name ctxt ext]
                     (*If this is an arithmetic step, add algebra_simps to the simplifier*)
-                    |> is_metitarski_arithmetic_rule rule ? add_global_fact ["algebra_simps"]
+                    |> is_metitarski_arithmetic_rule rule ? add_global_fact ["metitarski_simps algebra_simps"]
                     |> sort_facts
 
                   val meths =
