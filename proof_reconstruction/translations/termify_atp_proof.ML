@@ -283,11 +283,56 @@ fun atp_formula_to_term (atp_formula
 fun wrap_term (t : term) : term =
   Const ("HOL.Trueprop", @{typ "bool \<Rightarrow> prop"}) $ t
 
+
+(* Transform Free variables to Bound, bound by Pure.All *)
+fun bind_free_vars (t : term) : term =
+  let
+    fun get_index list element acc =
+    (case list of
+      [] => NONE
+    | l::ls => if l=element then SOME acc
+               else get_index ls element (acc+1)
+    ) 
+
+    val bound_vars : string list Unsynchronized.ref = Unsynchronized.ref []
+
+    fun bind_free_vars_aux (forall_count : int) (t : term) : term =
+      (case t of
+        Free (name, _) =>
+          if String.isPrefix "sko" name then t
+          else
+            (case get_index (!bound_vars) name 0 of
+              NONE => (bound_vars := (name::(!bound_vars));
+                       Bound ((List.length (!bound_vars)) - 1 + forall_count)
+                      )
+            | SOME i => Bound ((List.length (!bound_vars)) - i - 1 + forall_count)
+            )
+
+      | t1 $ t2 => (bind_free_vars_aux forall_count t1) $ (bind_free_vars_aux forall_count t2)
+          
+      | Abs (name, ty, t1) => Abs (name, ty, bind_free_vars_aux (forall_count+1) t1)
+
+      | t1 => t1         
+      )
+
+    val renamed_t : term = bind_free_vars_aux 0 t
+
+    fun add_pure_all (bound_list : string list) (t : term) =
+      (case bound_list of
+        [] => t
+      | var::vars => Const ("Pure.all", @{typ "(real \<Rightarrow> prop) \<Rightarrow> prop"}) $
+                          Abs (var, @{typ "real"}, add_pure_all vars t)
+      )
+  in
+    add_pure_all (!bound_vars) renamed_t
+  end
+  
+
 fun termify_atp_proof (atp_proof : string ATP_Proof.atp_proof) 
   : (term, string) ATP_Proof.atp_step list=
   let 
     fun termify_atp_proof_line (name, role, phi, rule, from) =
-      (name, role, wrap_term (atp_formula_to_term (fix_bound_vars_atp_formula [] phi)), rule, from)
+      (name, role, bind_free_vars (wrap_term (atp_formula_to_term (fix_bound_vars_atp_formula [] phi))), rule, from)
   in
     List.map termify_atp_proof_line atp_proof
   end;

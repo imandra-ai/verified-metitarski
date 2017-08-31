@@ -7,6 +7,267 @@ lemma "\<forall>(X::real).((Not((X <= -1)) --> (((2 * abs(X)) / (2 + X)) <= abs(
 proof -
   { fix rr :: real
     have "\<bar>ln (1 + rr)\<bar> < rr * 2 / (2 + rr) \<or> \<bar>rr\<bar> \<noteq> rr \<or> \<bar>rr\<bar> * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
+      by auto (* 20 ms *)
+    then have ff1: "rr < 0 \<or> \<bar>ln (1 + rr)\<bar> < rr * 2 / (2 + rr) \<or> \<bar>rr\<bar> * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
+      using abs_nonnegative by blast (* 0.0 ms *)
+    have "ln (1 + rr) < rr * 2 / (2 + rr) \<or> \<bar>ln (1 + rr)\<bar> \<noteq> ln (1 + rr) \<or> rr * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
+      by auto (* 16 ms *)
+    then have ff2: "ln (1 + rr) < 0 \<or> ln (1 + rr) < rr * 2 / (2 + rr) \<or> rr * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
+      using abs_nonnegative by blast (* 4 ms *)
+    have "\<And>r ra. \<not> lgen False ra (1 / 2 * (1 + 5 * r) * (r - 1) / (r * (2 + r))) \<or> r \<le> 0 \<or> ra \<le> ln r"
+      by (metis lgen_le_neg ln_lower_bound_cf3) (* failed *)
+    then have ff3: "\<And>r ra. (- (1::real) / 2 + ra * (- 2 + ra * (5 / 2))) / (ra * (2 + ra)) < r \<or> ra \<le> 0 \<or> r \<le> ln ra"
+      by (simp add: metitarski_simps algebra_simps) (* failed *)
+    have "\<bar>ln (1 + rr)\<bar> < - rr * 2 / (2 + rr) \<or> \<bar>rr\<bar> \<noteq> - rr \<or> \<bar>rr\<bar> * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
+      by auto (* 20 ms *)
+    then have ff4: "\<bar>ln (1 + rr)\<bar> < - rr * 2 / (2 + rr) \<or> 0 \<le> rr \<or> \<bar>rr\<bar> * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
+      using abs_negative by blast (* 0.0 ms *)
+    have "- ln (1 + rr) < rr * - 2 / (2 + rr) \<or> \<bar>ln (1 + rr)\<bar> \<noteq> - ln (1 + rr) \<or> rr * - 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
+      by auto (* 12 ms *)
+    then have ff5: "- ln (1 + rr) < rr * - 2 / (2 + rr) \<or> 0 \<le> ln (1 + rr) \<or> rr * - 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
+      using abs_negative by blast (* 0.0 ms *)
+    have "\<And>r ra. \<not> lgen False (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) r \<or> ra \<le> 0 \<or> ln ra \<le> r"
+      by (metis lgen_le_neg ln_upper_bound_cf3) (* failed *)
+    then have ff6: "\<And>r ra. (ra::real) < (- 5 / 2 + r * (2 + r * (1 / 2))) / (1 + r * 2) \<or> r \<le> 0 \<or> ln r \<le> ra"
+      by (simp add: metitarski_simps algebra_simps) (* failed *)
+    have "\<And>r ra. \<not> lgen False ra ((r - 1) / r) \<or> r \<le> 0 \<or> ra \<le> ln r"
+      using lgen_le_neg ln_lower_bound_cf1 by blast (* 4 ms *)
+    then have ff7: "\<And>r ra. (- (1::real) + ra) / ra < r \<or> ra \<le> 0 \<or> r \<le> ln ra"
+      using metitarski_simps algebra_simps by auto (* 36 ms *)
+    have "\<not> - 2 < rr \<or> \<not> rr \<le> - 2"
+      by simp (* 0.0 ms *)
+    moreover
+    { assume "\<not> rr \<le> - 2"
+      then have "\<not> rr * (rr * (rr * (- 1 / 2))) \<le> 0 \<and> \<not> rr \<le> - 2 \<or> \<not> 0 < rr * (rr * (rr * (- 1 / 2))) \<and> \<not> rr \<le> - 2"
+        by simp (* 4 ms *)
+      moreover
+      { assume "\<not> 0 < rr * (rr * (rr * (- 1 / 2))) \<and> \<not> rr \<le> - 2"
+        then have "\<not> rr * (3 + rr * (5 / 2)) * (2 + rr) < rr * (6 + rr * (8 + rr * 2)) \<and> \<not> 2 + rr \<le> 0"
+          by (simp add: metitarski_simps algebra_simps) (* 16 ms *)
+        then have "\<not> rr * (3 + rr * (5 / 2)) < rr * (6 + rr * (8 + rr * 2)) / (2 + rr)"
+          using leq_left_divide_mul_pos by fastforce (* 108 ms *)
+        then have "- 3 < rr * (4 + rr) \<longrightarrow> \<not> rr * (3 + rr * (5 / 2)) < rr * (6 + rr * (8 + rr * 2)) / (2 + rr) \<and> \<not> rr * (4 + rr) \<le> - 3"
+          by auto (* 8 ms *)
+        moreover
+        { assume "\<not> rr * (3 + rr * (5 / 2)) < rr * (6 + rr * (8 + rr * 2)) / (2 + rr) \<and> \<not> rr * (4 + rr) \<le> - 3"
+          then have "\<not> rr * (3 + rr * (5 / 2)) < rr * 2 / (2 + rr) * (3 + rr * (4 + rr)) \<and> \<not> 3 + rr * (4 + rr) \<le> 0"
+            by (simp add: metitarski_simps algebra_simps) (* failed *)
+          then have "\<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr)"
+            using leq_right_divide_mul_pos by blast (* > 5.0 s, timed out *)
+          then have "- 1 < rr \<longrightarrow> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+            by auto (* 4 ms *)
+          moreover
+          { assume "\<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+            then have "\<not> 0 \<le> rr \<and> \<not> rr \<le> - 1 \<or> \<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+              by auto (* 4 ms *)
+            moreover
+            { assume "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+              then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"
+                by (simp add: metitarski_simps algebra_simps) (* failed *)
+              then have "\<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr)"
+                using ff3 by fastforce (* 2.4 s *) }
+            ultimately have "\<not> 0 \<le> rr \<and> \<not> rr \<le> - 1 \<or> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr)"
+              by metis (* 12 ms *) }
+          ultimately have "- 1 < rr \<longrightarrow> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr) \<or> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+            by metis (* 12 ms *) }
+        moreover
+        { assume "\<not> - 3 < rr * (4 + rr)"
+          then have "\<not> - 1 < rr \<or> \<not> 0 < rr * rr \<or> \<not> 0 \<le> rr"
+            by sos (* 20 ms *) }
+        ultimately have "0 \<le> rr \<and> 0 < rr * rr \<and> - 1 < rr \<longrightarrow> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr) \<or> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+          by metis (* 24 ms *) }
+      moreover
+      { assume "\<not> rr * (rr * (rr * (- 1 / 2))) \<le> 0 \<and> \<not> rr \<le> - 2"
+        then have "\<not> - 1 < rr \<or> \<not> 0 < rr * rr \<or> \<not> 0 \<le> rr"
+          by sos (* 64 ms *) }
+      ultimately have "0 \<le> rr \<and> 0 < rr * rr \<and> - 1 < rr \<longrightarrow> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr) \<or> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+        by metis (* 16 ms *) }
+    moreover
+    { assume "\<not> - 2 < rr"
+      then have "\<not> - 1 < rr \<or> \<not> 0 < rr * rr \<or> \<not> 0 \<le> rr"
+        by sos (* 8 ms *) }
+    ultimately have "0 \<le> rr \<and> 0 < rr * rr \<and> - 1 < rr \<longrightarrow> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr) \<or> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+      by metis (* 12 ms *)
+    moreover
+    { assume "\<not> 0 < rr * rr"
+      then have "\<not> 0 < rr * rr \<and> \<not> - 2 < rr \<or> \<not> 0 < rr * rr \<and> \<not> rr \<le> - 2"
+        by simp (* 0.0 ms *)
+      moreover
+      { assume "\<not> 0 < rr * rr \<and> \<not> rr \<le> - 2"
+        then have "\<not> rr * (2 + rr) < rr * (2 + rr * 2) \<and> \<not> 2 + rr \<le> 0"
+          by (simp add: metitarski_simps algebra_simps) (* 4 ms *)
+        then have "\<not> rr < rr * (2 + rr * 2) / (2 + rr)"
+          using leq_left_divide_mul_pos by fastforce (* 68 ms *)
+        then have "- 1 < rr \<longrightarrow> \<not> rr < rr * (2 + rr * 2) / (2 + rr) \<and> \<not> rr \<le> - 1"
+          by auto (* 4 ms *)
+        moreover
+        { assume "\<not> rr < rr * (2 + rr * 2) / (2 + rr) \<and> \<not> rr \<le> - 1"
+          then have "\<not> rr < rr * 2 / (2 + rr) * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
+            by (simp add: metitarski_simps algebra_simps) (* 4 ms *)
+          then have "\<not> rr / (1 + rr) < rr * 2 / (2 + rr)"
+            using leq_right_divide_mul_pos by fastforce (* 4.1 s *)
+          then have "- 1 < rr \<longrightarrow> \<not> rr / (1 + rr) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+            by auto (* 4 ms *)
+          moreover
+          { assume "\<not> rr / (1 + rr) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+            then have "\<not> rr < 0 \<and> \<not> rr / (1 + rr) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1 \<or> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+              by auto (* 0.0 ms *)
+            moreover
+            { assume "\<not> rr < 0 \<and> \<not> rr / (1 + rr) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+              then have "\<not> rr < 0 \<and> \<not> (- 1 + (1 + rr)) / (1 + rr) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"
+                by (simp add: metitarski_simps algebra_simps) (* 4 ms *)
+              then have "\<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr)"
+                using ff7 by fastforce (* 1.5 s *) }
+            ultimately have "\<not> 0 \<le> rr \<and> \<not> rr \<le> - 1 \<or> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr)"
+              by metis (* 12 ms *) }
+          ultimately have "- 1 < rr \<longrightarrow> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr) \<or> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+            by metis (* 16 ms *) }
+        ultimately have "- 1 < rr \<longrightarrow> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr) \<or> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+          by metis (* 20 ms *) }
+      moreover
+      { assume "\<not> 0 < rr * rr \<and> \<not> - 2 < rr"
+        then have "\<not> - 1 < rr \<or> \<not> 0 \<le> rr"
+          by sos (* 12 ms *) }
+      ultimately have "0 \<le> rr \<and> - 1 < rr \<longrightarrow> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr) \<or> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+        by metis (* 24 ms *) }
+    ultimately have "0 \<le> rr \<and> - 1 < rr \<longrightarrow> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr) \<or> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+      by metis (* 28 ms *)
+    moreover
+    { assume "\<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr)"
+      then have "\<not> rr < 0 \<and> \<not> - 1 < rr \<or> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+        by auto (* 4 ms *)
+      moreover
+      { assume "\<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+        then have "\<not> ln (1 + rr) < 0 \<and> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr)"
+          by (simp add: metitarski_simps algebra_simps) (* 4 ms *)
+        then have "\<not> rr < 0 \<and> \<not> \<bar>ln (1 + rr)\<bar> < rr * 2 / (2 + rr)"
+          using ff2 by simp (* 8 ms *)
+        then have "\<not> \<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr)"
+          using ff1 by force (* 24 ms *) }
+      moreover
+      { assume "\<not> rr < 0 \<and> \<not> - 1 < rr"
+        then have "\<not> - 1 < rr"
+          by sos (* 8 ms *) }
+      ultimately have "\<not> - 1 < rr \<or> \<not> \<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr)"
+        by metis (* 16 ms *) }
+    moreover
+    { assume "\<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+      then have "\<not> - 1 < rr \<or> \<not> 0 \<le> rr"
+        by sos (* 36 ms *) }
+    ultimately have "\<not> - 1 < rr \<or> \<not> 0 \<le> rr \<or> \<not> \<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr)"
+      by metis (* 20 ms *)
+    moreover
+    { assume "\<not> 0 \<le> rr"
+      then have "\<not> 0 \<le> rr \<and> \<not> rr \<le> - 2 \<or> \<not> - 2 < rr \<and> \<not> 0 \<le> rr"
+        by simp (* 0.0 ms *)
+      moreover
+      { assume "\<not> 0 \<le> rr \<and> \<not> rr \<le> - 2"
+        then have "\<not> 0 \<le> rr \<and> \<not> rr * (rr * (rr * (1 / 2))) \<le> 0 \<and> \<not> rr \<le> - 2 \<or> \<not> 0 < rr * (rr * (rr * (1 / 2))) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 2"
+          by simp (* 4 ms *)
+        moreover
+        { assume "\<not> 0 < rr * (rr * (rr * (1 / 2))) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 2"
+          then have "\<not> rr * (- 3 + rr * (- 1 / 2)) * (2 + rr) < rr * (- 6 + rr * - 4) \<and> \<not> 0 \<le> rr \<and> \<not> 2 + rr \<le> 0"
+            by (simp add: metitarski_simps algebra_simps) (* 16 ms *)
+          then have "\<not> rr * (- 3 + rr * (- 1 / 2)) < rr * (- 6 + rr * - 4) / (2 + rr) \<and> \<not> 0 \<le> rr"
+            using leq_left_divide_mul_pos by blast (* > 5.0 s, timed out *)
+          then have "\<not> - 3 / 2 < rr \<and> \<not> 0 \<le> rr \<or> \<not> rr * (- 3 + rr * (- 1 / 2)) < rr * (- 6 + rr * - 4) / (2 + rr) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 3 / 2"
+            by simp (* 8 ms *)
+          moreover
+          { assume "\<not> rr * (- 3 + rr * (- 1 / 2)) < rr * (- 6 + rr * - 4) / (2 + rr) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 3 / 2"
+            then have "\<not> rr * 2 / (2 + rr) * (3 + rr * 2) < rr * (3 + rr * (1 / 2)) \<and> \<not> 0 \<le> rr \<and> \<not> 3 + rr * 2 \<le> 0"
+              by (simp add: metitarski_simps algebra_simps) (* failed *)
+            then have "\<not> rr * 2 / (2 + rr) < rr * (3 + rr * (1 / 2)) / (3 + rr * 2) \<and> \<not> 0 \<le> rr"
+              using leq_left_divide_mul_pos by blast (* > 5.0 s, timed out *)
+            then have "\<not> rr * 2 / (2 + rr) < rr * (3 + rr * (1 / 2)) / (3 + rr * 2) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1 \<or> \<not> - 1 < rr \<and> \<not> 0 \<le> rr"
+              by simp (* 8 ms *)
+            moreover
+            { assume "\<not> rr * 2 / (2 + rr) < rr * (3 + rr * (1 / 2)) / (3 + rr * 2) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+              then have "\<not> rr * 2 / (2 + rr) < (- 5 / 2 + (1 + rr) * (2 + (1 + rr) * (1 / 2))) / (1 + (1 + rr) * 2) \<and> \<not> 0 \<le> rr \<and> \<not> 1 + rr \<le> 0"
+                by (simp add: metitarski_simps algebra_simps) (* failed *)
+              then have "\<not> rr * 2 / (2 + rr) < ln (1 + rr) \<and> \<not> 0 \<le> rr"
+                using ff6 by fastforce (* 792 ms *)
+              then have "\<not> rr * 2 / (2 + rr) < ln (1 + rr) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 2 \<or> \<not> - 2 < rr \<and> \<not> 0 \<le> rr"
+                by auto (* 20 ms *)
+              moreover
+              { assume "\<not> rr * 2 / (2 + rr) < ln (1 + rr) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 2"
+                then have "\<not> rr * 2 < ln (1 + rr) * (2 + rr) \<and> \<not> 0 \<le> rr"
+                  by (simp add: metitarski_simps algebra_simps) (* failed *)
+                then have "\<not> - 2 < rr \<and> \<not> 0 \<le> rr \<or> \<not> rr * 2 < ln (1 + rr) * (2 + rr) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 2"
+                  by auto (* 20 ms *)
+                moreover
+                { assume "\<not> rr * 2 < ln (1 + rr) * (2 + rr) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 2"
+                  then have "\<not> ln (1 + rr) * - 1 * (2 + rr) < rr * - 2 \<and> \<not> 0 \<le> rr \<and> \<not> 2 + rr \<le> 0"
+                    by (simp add: metitarski_simps algebra_simps) (* 8 ms *)
+                  then have "\<not> ln (1 + rr) * - 1 < rr * - 2 / (2 + rr) \<and> \<not> 0 \<le> rr"
+                    using leq_left_divide_mul_pos by blast (* > 5.0 s, timed out *)
+                  then have "\<not> - 1 < rr \<and> \<not> 0 \<le> rr \<or> \<not> ln (1 + rr) * - 1 < rr * - 2 / (2 + rr) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+                    by fastforce (* 8 ms *)
+                  moreover
+                  { assume "\<not> ln (1 + rr) * - 1 < rr * - 2 / (2 + rr) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 1"
+                    then have "\<not> - ln (1 + rr) < rr * - 2 / (2 + rr) \<and> \<not> 0 \<le> ln (1 + rr) \<and> \<not> 0 \<le> rr"
+                      by (simp add: metitarski_simps algebra_simps) (* 16 ms *)
+                    then have "\<not> \<bar>ln (1 + rr)\<bar> < rr * - 2 / (2 + rr) \<and> \<not> 0 \<le> rr"
+                      using ff5 by simp (* 24 ms *)
+                    then have "\<not> \<bar>ln (1 + rr)\<bar> < - rr * 2 / (2 + rr) \<and> \<not> 0 \<le> rr"
+                      by (simp add: metitarski_simps algebra_simps) (* 20 ms *)
+                    then have "\<not> \<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr)"
+                      using ff4 by auto (* 72 ms *) }
+                  ultimately have "\<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr) \<longrightarrow> \<not> - 1 < rr \<and> \<not> 0 \<le> rr"
+                    by metis (* 40 ms *) }
+                ultimately have "\<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr) \<longrightarrow> \<not> - 1 < rr \<and> \<not> 0 \<le> rr \<or> \<not> - 2 < rr \<and> \<not> 0 \<le> rr"
+                  by metis (* 32 ms *) }
+              ultimately have "\<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr) \<longrightarrow> \<not> - 1 < rr \<and> \<not> 0 \<le> rr \<or> \<not> - 2 < rr \<and> \<not> 0 \<le> rr"
+                by metis (* 32 ms *) }
+            ultimately have "\<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr) \<longrightarrow> \<not> - 1 < rr \<and> \<not> 0 \<le> rr \<or> \<not> - 2 < rr \<and> \<not> 0 \<le> rr"
+              by metis (* 88 ms *)
+            moreover
+            { assume "\<not> - 1 < rr \<and> \<not> 0 \<le> rr"
+              then have "\<not> - 1 < rr"
+                by sos (* 88 ms *) }
+            ultimately have "\<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr) \<and> - 1 < rr \<longrightarrow> \<not> - 2 < rr \<and> \<not> 0 \<le> rr"
+              by metis (* 32 ms *) }
+          moreover
+          { assume "\<not> - 3 / 2 < rr \<and> \<not> 0 \<le> rr"
+            then have "\<not> - 1 < rr"
+              by sos (* 12 ms *) }
+          ultimately have "\<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr) \<and> - 1 < rr \<longrightarrow> \<not> - 2 < rr \<and> \<not> 0 \<le> rr"
+            by metis (* 64 ms *) }
+        moreover
+        { assume "\<not> 0 \<le> rr \<and> \<not> rr * (rr * (rr * (1 / 2))) \<le> 0 \<and> \<not> rr \<le> - 2"
+          then have "\<not> - 1 < rr"
+            by sos (* 40 ms *) }
+        ultimately have "\<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr) \<and> - 1 < rr \<longrightarrow> \<not> - 2 < rr \<and> \<not> 0 \<le> rr"
+          by metis (* 64 ms *) }
+      ultimately have "\<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr) \<and> - 1 < rr \<longrightarrow> \<not> - 2 < rr \<and> \<not> 0 \<le> rr"
+        by metis (* 40 ms *)
+      moreover
+      { assume "\<not> - 2 < rr \<and> \<not> 0 \<le> rr"
+        then have "\<not> - 1 < rr"
+          by sos (* 72 ms *) }
+      ultimately have "\<not> - 1 < rr \<or> \<not> \<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr)"
+        by metis (* 28 ms *) }
+    ultimately have "\<not> - 1 < rr \<or> \<not> \<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr)"
+      by metis (* 20 ms *)
+    moreover
+    { assume "\<not> \<bar>ln (1 + rr)\<bar> < \<bar>rr\<bar> * 2 / (2 + rr)"
+      then have "\<not> \<bar>ln (1 + rr)\<bar> < 2 * \<bar>rr\<bar> / (2 + rr)"
+        by (simp add: metitarski_simps algebra_simps) (* 36 ms *)
+      then have "\<not> \<bar>ln (1 + rr)\<bar> < 2 * \<bar>rr\<bar> / (2 + rr) \<or> \<not> - 1 < rr"
+        by metis (* 8 ms *) }
+    moreover
+    { assume "\<not> - 1 < rr"
+      then have "\<not> \<bar>ln (1 + rr)\<bar> < 2 * \<bar>rr\<bar> / (2 + rr) \<or> \<not> - 1 < rr"
+        by metis (* 4 ms *) }
+    ultimately have "\<not> \<bar>ln (1 + rr)\<bar> < 2 * \<bar>rr\<bar> / (2 + rr) \<or> \<not> - 1 < rr"
+      by metis (* 20 ms *) }
+  then have "\<forall>r. \<not> - (1::real) < r \<or> \<not> \<bar>ln (1 + r)\<bar> < 2 * \<bar>r\<bar> / (2 + r)"
+    by blast (* 0.0 ms *)
+  then show "\<forall>r>- (1::real). 2 * \<bar>r\<bar> / (2 + r) \<le> \<bar>ln (1 + r)\<bar>"
+    by auto (* 20 ms *)
+qed
+proof -
+  { fix rr :: real
+    have "\<bar>ln (1 + rr)\<bar> < rr * 2 / (2 + rr) \<or> \<bar>rr\<bar> \<noteq> rr \<or> \<bar>rr\<bar> * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
       by auto (* 16 ms *)
     then have ff1: "rr < 0 \<or> \<bar>ln (1 + rr)\<bar> < rr * 2 / (2 + rr) \<or> \<bar>rr\<bar> * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
       using abs_nonnegative by blast (* 4 ms *)
