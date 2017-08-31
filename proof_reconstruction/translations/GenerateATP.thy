@@ -146,16 +146,20 @@ lemma foo2: "\<forall>(Y::real).0 <= abs(Y^3)"
   apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
 proof -
   { fix rr :: real
+    have ff1: "0 \<le> rr * (rr * rr) \<or> \<bar>rr * (rr * rr)\<bar> = - (rr * (rr * rr))"
+      using abs_negative by auto (* 4 ms *)
     have "- (rr * (rr * rr)) < 0 \<or> \<bar>rr * (rr * rr)\<bar> \<noteq> - (rr * (rr * rr)) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
-      by auto (* 20 ms *)
-    then have ff1: "- (rr * (rr * rr)) < 0 \<or> 0 \<le> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
-      using abs_negative by blast (* 8 ms *)
-    have "rr * (rr * rr) < 0 \<or> \<bar>rr * (rr * rr)\<bar> \<noteq> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
       by auto (* 4 ms *)
-    then have ff2: "rr * (rr * rr) < 0 \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
-      using abs_nonnegative by blast (* 4 ms *)
+    then have ff2: "- (rr * (rr * rr)) < 0 \<or> 0 \<le> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
+      using ff1 by fastforce (* 0.0 ms *)
+    have ff3: "rr * (rr * rr) < 0 \<or> \<bar>rr * (rr * rr)\<bar> = rr * (rr * rr)"
+      using abs_nonnegative by auto (* 8 ms *)
+    have "rr * (rr * rr) < 0 \<or> \<bar>rr * (rr * rr)\<bar> \<noteq> rr * (rr * rr) \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
+      by auto (* 0.0 ms *)
+    then have ff4: "rr * (rr * rr) < 0 \<or> 0 \<le> \<bar>rr * (rr * rr)\<bar>"
+      using ff3 by fastforce (* 0.0 ms *)
     have "\<not> rr * (rr * rr) \<le> 0 \<or> \<not> 0 < rr * (rr * rr)"
-      by fastforce (* 4 ms *)
+      by auto (* 4 ms *)
     moreover
     { assume "\<not> 0 < rr * (rr * rr)"
       then have "\<not> - (rr * (rr * rr)) < 0"
@@ -165,7 +169,7 @@ proof -
       moreover
       { assume "\<not> - (rr * (rr * rr)) < 0 \<and> \<not> 0 \<le> rr * (rr * rr)"
         then have "\<not> \<bar>rr * (rr * rr)\<bar> < 0"
-          using ff1 by auto (* 16 ms *) }
+          using ff2 by fastforce (* 12 ms *) }
       ultimately have "\<not> rr * (rr * rr) < 0 \<or> \<not> \<bar>rr * (rr * rr)\<bar> < 0"
         by metis (* 8 ms *) }
     moreover
@@ -173,68 +177,71 @@ proof -
       then have "\<not> 0 < rr * (rr * (rr * - 1))"
         by sos (* 16 ms *)
       then have "\<not> rr * (rr * rr) < 0"
-        by (simp add: metitarski_simps algebra_simps) (* 4 ms *) }
+        by (simp add: metitarski_simps algebra_simps) (* 0.0 ms *) }
     ultimately have "\<not> rr * (rr * rr) < 0 \<or> \<not> \<bar>rr * (rr * rr)\<bar> < 0"
-      by metis (* 8 ms *)
+      by metis (* 12 ms *)
     moreover
     { assume "\<not> rr * (rr * rr) < 0"
       then have "\<not> \<bar>rr * (rr * rr)\<bar> < 0"
-        using ff2 by auto (* 8 ms *) }
+        using ff4 by auto (* 16 ms *) }
     ultimately have "\<not> \<bar>rr * (rr * rr)\<bar> < 0"
       by metis (* 8 ms *)
     then have "\<not> \<bar>rr ^ 3\<bar> < 0"
-      by (simp add: metitarski_simps algebra_simps) (* 32 ms *) }
+      by (simp add: metitarski_simps algebra_simps) (* 12 ms *) }
   then have "\<forall>r. \<not> \<bar>(r::real) ^ 3\<bar> < 0"
-    by presburger (* 0.0 ms *)
+    by blast (* 0.0 ms *)
   then show ?thesis
-    by auto (* 36 ms *)
+    by auto (* 20 ms *)
 qed
-
  
 lemma foo3: "\<forall>(X::real) (Y::real).X+Y \<le> abs (X+Y)"     
   apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
 proof -
   { fix rr :: real and rra :: real
+    have ff1: "0 \<le> rr + rra \<or> \<bar>rr + rra\<bar> = - (rr + rra)"
+      using abs_negative by auto (* 32 ms *)
     have "- (rr + rra) < rr + rra \<or> \<bar>rr + rra\<bar> \<noteq> - (rr + rra) \<or> rr + rra \<le> \<bar>rr + rra\<bar>"
       by auto (* 32 ms *)
-    then have ff1: "- (rr + rra) < rr + rra \<or> 0 \<le> rr + rra \<or> rr + rra \<le> \<bar>rr + rra\<bar>"
-      using abs_negative by blast (* 0.0 ms *)
+    then have ff2: "- (rr + rra) < rr + rra \<or> 0 \<le> rr + rra \<or> rr + rra \<le> \<bar>rr + rra\<bar>"
+      using ff1 by fastforce (* 0.0 ms *)
+    have ff3: "rr + rra < 0 \<or> \<bar>rr + rra\<bar> = rr + rra"
+      using abs_nonnegative by auto (* 40 ms *)
     have "rr + rra < rr + rra \<or> \<bar>rr + rra\<bar> \<noteq> rr + rra \<or> rr + rra \<le> \<bar>rr + rra\<bar>"
-      by auto (* 24 ms *)
-    then have ff2: "rr + rra < 0 \<or> rr + rra < rr + rra \<or> rr + rra \<le> \<bar>rr + rra\<bar>"
-      using abs_nonnegative by blast (* 4 ms *)
+      by auto (* 20 ms *)
+    then have ff4: "rr + rra < 0 \<or> rr + rra < rr + rra \<or> rr + rra \<le> \<bar>rr + rra\<bar>"
+      using ff3 by fastforce (* 0.0 ms *)
     have "\<not> rr * - 1 \<le> rra \<or> \<not> rra < rr * - 1"
-      by fastforce (* 0.0 ms *)
+      by simp (* 4 ms *)
     moreover
     { assume "\<not> rr * - 1 \<le> rra"
       then have "\<not> rr * - 1 \<le> rra \<and> \<not> rra \<le> rr * - 1 \<or> \<not> rr * - 1 < rra \<and> \<not> rr * - 1 \<le> rra"
-        by auto (* 8 ms *)
+        by simp (* 8 ms *)
       moreover
       { assume "\<not> rr * - 1 < rra \<and> \<not> rr * - 1 \<le> rra"
         then have "\<not> - (rr + rra) < rr + rra \<and> \<not> 0 \<le> rr + rra"
-          by (simp add: metitarski_simps algebra_simps) (* 12 ms *)
+          by (simp add: metitarski_simps algebra_simps) (* 56 ms *)
         then have "\<not> \<bar>rr + rra\<bar> < rr + rra"
-          using ff1 by fastforce (* 32 ms *) }
+          using ff2 by fastforce (* 16 ms *) }
       moreover
       { assume "\<not> rr * - 1 \<le> rra \<and> \<not> rra \<le> rr * - 1"
         then have "\<not> rra < rr * - 1"
-          by sos (* 32 ms *) }
+          by sos (* 92 ms *) }
       ultimately have "\<not> \<bar>rr + rra\<bar> < rr + rra \<or> \<not> rra < rr * - 1"
         by metis (* 12 ms *) }
     ultimately have "\<not> \<bar>rr + rra\<bar> < rr + rra \<or> \<not> rra < rr * - 1"
-      by metis (* 4 ms *)
+      by metis (* 12 ms *)
     moreover
     { assume "\<not> rra < rr * - 1"
       then have "\<not> rr + rra < 0 \<and> \<not> rr + rra < rr + rra"
-        by (simp add: metitarski_simps algebra_simps) (* 4 ms *)
+        by (simp add: metitarski_simps algebra_simps) (* 8 ms *)
       then have "\<not> \<bar>rr + rra\<bar> < rr + rra"
-        using ff2 by auto (* 16 ms *) }
+        using ff4 by auto (* 20 ms *) }
     ultimately have "\<not> \<bar>rr + rra\<bar> < rr + rra"
       by metis (* 8 ms *) }
   then have "\<forall>r ra. \<not> \<bar>(r::real) + ra\<bar> < r + ra"
     by blast (* 0.0 ms *)
   then show ?thesis
-    by auto (* 8 ms *)
+    by auto (* 12 ms *)
 qed
 
 (*

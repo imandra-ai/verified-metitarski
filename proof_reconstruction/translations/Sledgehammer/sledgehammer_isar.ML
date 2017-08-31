@@ -214,8 +214,8 @@ fun add_lines_pass2 res [] = rev res
              a MT free variable.*)
            not (is_metitarski_decision_rule rule) andalso  
            not (is_metitarski_arithmetic_rule rule) andalso
-           not (is_metitarski_conjunct_rule rule) (*andalso 
-           not (is_metitarski_subst_rule rule)*) )then
+           not (is_metitarski_conjunct_rule rule) andalso 
+           not (is_metitarski_subst_rule rule) )then
         add_lines_pass2 res (map (replace_dependencies_in_line (name, deps)) lines)
       else
         add_lines_pass2 (line :: res) lines
@@ -242,13 +242,13 @@ val metitarski_decision_methods = [Sos_Method]
 (*We want to try both of these in case there's a substitution step hidden inside.
   Auto sometimes also works for tainted sequents that were inverted 
   (the ones that generate a case split)*)
-val metitarski_resolution_methods = [Metis_Method (NONE, NONE), Blast_Method] @ basic_simp_based_methods
+val metitarski_resolution_methods = [Metis_Method (NONE, NONE)] @ basic_simp_based_methods @ [Blast_Method]
 (*Handle the MT canonicalize steps separately*)
 val metitarski_canonicalize_methods = [Auto_Method]
 (*For MT arithmetic steps*)
 val metitarski_arithmetic_methods = [Simp_Method, Auto_Method]
 (*For subst steps*)
-val metitarski_subst_methods = [Auto_Method]
+val metitarski_subst_methods = [Auto_Method, Blast_Method]
 
 fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
     (one_line_params as ((used_facts, (_, one_line_play)), banner, subgoal, subgoal_count)) =
@@ -431,6 +431,8 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                        then skolem_methods
                      (*Handle metitarski arithmetic steps separately*)
                      else if is_metitarski_arithmetic_rule rule then metitarski_arithmetic_methods
+                     (*For subst steps*)
+                     else if is_metitarski_subst_rule rule then metitarski_subst_methods
                      else  
                        ((if skolem then skolem_methods
                        else if is_arith_rule rule then arith_methods
@@ -438,9 +440,7 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                        (*Special rules for metitarski decision steps*)
                        else if is_metitarski_decision_rule rule then metitarski_decision_methods
                        (*Handle canonicalize steps separately*)
-                       else if is_metitarski_canonicalize_rule rule then metitarski_canonicalize_methods
-                       (*For subst steps*)
-                       else if is_metitarski_subst_rule rule then metitarski_subst_methods
+                       else if is_metitarski_canonicalize_rule rule then metitarski_canonicalize_methods                       
                        else systematic_methods')
                       |> massage_methods)
 
