@@ -1,5 +1,8 @@
 theory Example
-  imports Main Real Transcendental "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsGeneral"
+  imports Main Real Transcendental 
+    "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsGeneral"
+    "../../../PSL/PSL"
+    "~~/src/HOL/Library/Sum_of_Squares"
 begin
  
 declare[[ML_print_depth=50]]  
@@ -65,38 +68,27 @@ qed
 lemma "1 / 2 * (1 + 5 * (X_000060::real)) * (X_000060 - 1) = - 1 / 2 + X_000060 * (- 2 + X_000060 * (5 / 2))"  
   apply(simp add: algebra_simps divide_simps)
   done
-
-declare [[simp_trace_depth_limit=20]]     
- 
+    
+strategy MTSimp = Dynamic(Simp) 
+    
 lemma "True"
 proof -
   {
     fix rr :: real
-    have "\<And>r ra. \<not> lgen False (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) r \<or> r \<le> 0 "  
+    assume "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+    then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"
+        by sos  
+      
+    have " \<And>r ra.\<not> (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) \<le> r \<or> r \<le> 0 \<or> ra \<le> (X::real)"  
       sorry
-    then have "\<And>r ra. (r::real) < (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2) \<or> r \<le> 0 "
+    then have " \<And>r ra. (r::real) < (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2) \<or> r \<le> 0 \<or> ra \<le> (X::real)"
+      by sos
+      find_proof MTSimp
+      apply (simp  add: arith)
+        
       using [[simp_trace_new mode=full]]
       using [[simp_break "?x \<or> ?y"]]
       apply(auto)
-      sledgehammer[max_facts =15]
-    proof -
-      fix r :: real and ra :: real
-      assume "\<And>ra r. ((ra::real) + 5) * (ra - 1) / (4 * ra + 2) \<le> r \<longrightarrow> r \<le> 0"
-      have False
-        by linarith (* failed *)
-      then show "r < (ra * (2 + ra / 2) - 5 / 2) / (1 + ra * 2)"
-        by metis
-    qed  
-      apply (smt[smt_timeout = 10] field_simps )
-
-        
-      apply(atomize)
-      apply(drule_tac ?x=r in spec)
-      apply(drule_tac ?x=ra in spec)
-      apply(auto)
-      apply(simp add: field_simps)
-      apply(frule imp_conv_disj)  
-      sledgehammer[isar_proof = true]
       sorry
         
     have "\<And>r ra. \<not> lgen False (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) r "  
@@ -104,7 +96,10 @@ proof -
     then have "\<And>r ra. (r::real) < (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2)"
       using [[simp_trace_new mode=full]]
       apply - 
+      apply (simp  add: arith)
+        
       apply(auto)
+      done 
   }
   then show ?thesis
      sorry

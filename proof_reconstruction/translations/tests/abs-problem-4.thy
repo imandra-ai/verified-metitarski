@@ -1,7 +1,10 @@
 theory "abs-problem-4"
   imports "../GenerateATP"
+          "../../../../PSL/PSL"
 begin
 
+strategy MTSimp = Thens[Dynamic(Auto), IsSolved]   
+  
 lemma "\<forall>(X::real).((Not((X <= -1)) --> (((2 * abs(X)) / (2 + X)) <= abs(ln((1 + X))))))" 
   apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
 proof -
@@ -25,11 +28,13 @@ proof -
     have ff7: "\<And>r ra. \<not> lgen False ra (ln r) \<or> ra \<le> ln r"
       using lgen_le_neg by blast (* 0.0 ms *)
     have "\<And>r ra. \<not> lgen False ra (1 / 2 * (1 + 5 * r) * (r - 1) / (r * (2 + r))) \<or> r \<le> 0 \<or> lgen False ra (ln r)"
-      using ln_lower_bound_cf3 by auto (* failed *)
+      using ln_lower_bound_cf3 sorry (* failed *)
     then have "\<And>r ra. \<not> lgen False ra (1 / 2 * (1 + 5 * r) * (r - 1) / (r * (2 + r))) \<or> r \<le> 0 \<or> ra \<le> ln r"
       using ff7 by blast (* 8 ms *)
     then have "\<And>r ra. (- (1::real) / 2 + ra * (- 2 + ra * (5 / 2))) / (ra * (2 + ra)) < r \<or> ra \<le> 0 \<or> r \<le> ln ra"
-      by (simp add: metitarski_simps algebra_simps) (* failed *)
+      find_proof MTSimp
+      apply (simp  add: arith)sorry
+        (* failed *)
     then have ff8: "(- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<or> 1 + rr \<le> 0 \<or> rr * 2 / (2 + rr) \<le> ln (1 + rr)"
       by blast (* 0.0 ms *)
     have ff9: "rr * (- 3 + rr * (- 1 / 2)) * (2 + rr) < rr * (- 6 + rr * - 4) \<or> 2 + rr \<le> 0 \<or> rr * (- 6 + rr * - 4) / (2 + rr) \<le> rr * (- 3 + rr * (- 1 / 2))"
@@ -53,11 +58,11 @@ proof -
     have ff16: "\<And>r ra. \<not> lgen False (ln ra) r \<or> ln ra \<le> r"
       using lgen_le_neg by auto (* 4 ms *)
     have "\<And>r ra. \<not> lgen False (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) r \<or> ra \<le> 0 \<or> lgen False (ln ra) r"
-      using ln_upper_bound_cf3 by auto (* failed *)
+      using ln_upper_bound_cf3 sorry (* failed *)
     then have "\<And>r ra. \<not> lgen False (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) r \<or> ra \<le> 0 \<or> ln ra \<le> r"
       using ff16 by blast (* 4 ms *)
     then have "\<And>r ra. (ra::real) < (- 5 / 2 + r * (2 + r * (1 / 2))) / (1 + r * 2) \<or> r \<le> 0 \<or> ln r \<le> ra"
-      by auto(* failed *)
+      sorry(* failed *)
     then have ff17: "rr * 2 / (2 + rr) < (- 5 / 2 + (1 + rr) * (2 + (1 + rr) * (1 / 2))) / (1 + (1 + rr) * 2) \<or> 1 + rr \<le> 0 \<or> ln (1 + rr) \<le> rr * 2 / (2 + rr)"
       by blast (* 0.0 ms *)
     have ff18: "rr * (2 + rr) < rr * (2 + rr * 2) \<or> 2 + rr \<le> 0 \<or> rr * (2 + rr * 2) / (2 + rr) \<le> rr"
@@ -83,7 +88,8 @@ proof -
       moreover
       { assume "\<not> 0 < rr * (rr * (rr * (- 1 / 2))) \<and> \<not> rr \<le> - 2"
         then have "\<not> rr * (3 + rr * (5 / 2)) * (2 + rr) < rr * (6 + rr * (8 + rr * 2)) \<and> \<not> 2 + rr \<le> 0"
-          by (simp add: metitarski_simps algebra_simps) (* 48 ms *)
+          by sos
+         (* by (simp add: metitarski_simps algebra_simps) (* 48 ms *)*)
         then have "\<not> rr * (3 + rr * (5 / 2)) < rr * (6 + rr * (8 + rr * 2)) / (2 + rr)"
           using ff1 by auto (* 28 ms *)
         then have "- 3 < rr * (4 + rr) \<longrightarrow> \<not> rr * (3 + rr * (5 / 2)) < rr * (6 + rr * (8 + rr * 2)) / (2 + rr) \<and> \<not> rr * (4 + rr) \<le> - 3"
@@ -91,6 +97,7 @@ proof -
         moreover
         { assume "\<not> rr * (3 + rr * (5 / 2)) < rr * (6 + rr * (8 + rr * 2)) / (2 + rr) \<and> \<not> rr * (4 + rr) \<le> - 3"
           then have "\<not> rr * (3 + rr * (5 / 2)) < rr * 2 / (2 + rr) * (3 + rr * (4 + rr)) \<and> \<not> 3 + rr * (4 + rr) \<le> 0"
+           try_hard
             by (auto simp add: field_simps) (* failed *)
           then have "\<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr)"
             using ff2 by simp (* 16 ms *)
@@ -103,7 +110,8 @@ proof -
             moreover
             { assume "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
               then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"
-                by (auto simp add: field_simps metitarski_simps) (* failed *)
+                find_proof MTSimp
+                by (auto simp add: field_simps) (* failed *)sorry
               then have "\<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr)"
                 using ff8 by force (* 40 ms *) }
             ultimately have "\<not> 0 \<le> rr \<and> \<not> rr \<le> - 1 \<or> \<not> rr < 0 \<and> \<not> ln (1 + rr) < rr * 2 / (2 + rr)"
@@ -135,7 +143,8 @@ proof -
       moreover
       { assume "\<not> 0 < rr * rr \<and> \<not> rr \<le> - 2"
         then have "\<not> rr * (2 + rr) < rr * (2 + rr * 2) \<and> \<not> 2 + rr \<le> 0"
-          by (simp add: metitarski_simps algebra_simps) (* 4 ms *)
+          by sos
+          (*by (simp add: metitarski_simps algebra_simps) (* 4 ms *)*)
         then have "\<not> rr < rr * (2 + rr * 2) / (2 + rr)"
           using ff18 by auto (* 28 ms *)
         then have "- 1 < rr \<longrightarrow> \<not> rr < rr * (2 + rr * 2) / (2 + rr) \<and> \<not> rr \<le> - 1"
