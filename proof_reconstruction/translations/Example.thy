@@ -65,16 +65,46 @@ qed
 lemma "1 / 2 * (1 + 5 * (X_000060::real)) * (X_000060 - 1) = - 1 / 2 + X_000060 * (- 2 + X_000060 * (5 / 2))"  
   apply(simp add: algebra_simps divide_simps)
   done
-    
-  
+
+declare [[simp_trace_depth_limit=20]]     
+ 
 lemma "True"
 proof -
   {
     fix rr :: real
-    have "\<And>r ra. \<not> lgen False (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) r \<or> ra \<le> 0 \<or> ln ra \<le> r"  
+    have "\<And>r ra. \<not> lgen False (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) r \<or> r \<le> 0 "  
       sorry
-    then have "\<And>r ra. (ra::real) < (- 5 / 2 + r * (2 + r * (1 / 2))) / (1 + r * 2) \<or> r \<le> 0 \<or> ln r \<le> ra"
-      sledgehammer[isar_proof = true](add: disjE)
+    then have "\<And>r ra. (r::real) < (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2) \<or> r \<le> 0 "
+      using [[simp_trace_new mode=full]]
+      using [[simp_break "?x \<or> ?y"]]
+      apply(auto)
+      sledgehammer[max_facts =15]
+    proof -
+      fix r :: real and ra :: real
+      assume "\<And>ra r. ((ra::real) + 5) * (ra - 1) / (4 * ra + 2) \<le> r \<longrightarrow> r \<le> 0"
+      have False
+        by linarith (* failed *)
+      then show "r < (ra * (2 + ra / 2) - 5 / 2) / (1 + ra * 2)"
+        by metis
+    qed  
+      apply (smt[smt_timeout = 10] field_simps )
+
+        
+      apply(atomize)
+      apply(drule_tac ?x=r in spec)
+      apply(drule_tac ?x=ra in spec)
+      apply(auto)
+      apply(simp add: field_simps)
+      apply(frule imp_conv_disj)  
+      sledgehammer[isar_proof = true]
+      sorry
+        
+    have "\<And>r ra. \<not> lgen False (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) r "  
+      sorry
+    then have "\<And>r ra. (r::real) < (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2)"
+      using [[simp_trace_new mode=full]]
+      apply - 
+      apply(auto)
   }
   then show ?thesis
      sorry

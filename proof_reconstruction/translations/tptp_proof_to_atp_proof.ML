@@ -14,7 +14,7 @@ fun tptp_proof_to_atp_proof (atp_problem : string ATP_Problem.atp_problem) (tptp
   : string ATP_Proof.atp_proof =
   let
 
-    (*Remove cnf axioms*)
+    (*Remove cnf axioms and proof header*)
     val trimmed_tptp_proof : string = 
       if String.isSubstring "GaveUp" tptp_proof 
       then raise Fail "Metitarski gave up."  (*To deal with a failed proof*)
@@ -25,7 +25,7 @@ fun tptp_proof_to_atp_proof (atp_problem : string ATP_Problem.atp_problem) (tptp
     (*Use translation from Isabelle/src/HOL/Tools/ATP*)
     val atp_proof = ATP_Satallax.atp_proof_of_tstplike_proof "1" atp_problem trimmed_tptp_proof
     
-    (*Remove the clause derived by strip=subgoal_0 and the Axioms*)
+    (*Remove the clause derived by strip=subgoal_0 and the rest of Axioms*)
     fun remove_strip accum [] = rev accum
        |remove_strip accum ((step as (_, role, _, rule, _))::proof) =   
             if rule = "strip" orelse role = ATP_Problem.Axiom 
@@ -39,7 +39,7 @@ fun tptp_proof_to_atp_proof (atp_problem : string ATP_Problem.atp_problem) (tptp
             in replace_from ((name, role, t, rule, from')::accum) name'' proof
             end
     
-    val conjecture_name = 
+   fun get_conjecture_name atp_proof = 
       (#1 (#1 (hd atp_proof)))
           handle Empty => 
             let
@@ -55,10 +55,14 @@ fun tptp_proof_to_atp_proof (atp_problem : string ATP_Problem.atp_problem) (tptp
               else ""
             end
     
+    
     val atp_proof = 
-        atp_proof
-            |>remove_strip []
-            |>replace_from [] conjecture_name
+      let
+        val stripped_atp_proof = remove_strip [] atp_proof
+        val conjecture_name = get_conjecture_name stripped_atp_proof
+      in
+        replace_from [] conjecture_name stripped_atp_proof
+      end
   in
     atp_proof
   end

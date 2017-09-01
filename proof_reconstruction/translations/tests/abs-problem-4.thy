@@ -57,7 +57,7 @@ proof -
     then have "\<And>r ra. \<not> lgen False (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) r \<or> ra \<le> 0 \<or> ln ra \<le> r"
       using ff16 by blast (* 4 ms *)
     then have "\<And>r ra. (ra::real) < (- 5 / 2 + r * (2 + r * (1 / 2))) / (1 + r * 2) \<or> r \<le> 0 \<or> ln r \<le> ra"
-      try(* failed *)
+      by auto(* failed *)
     then have ff17: "rr * 2 / (2 + rr) < (- 5 / 2 + (1 + rr) * (2 + (1 + rr) * (1 / 2))) / (1 + (1 + rr) * 2) \<or> 1 + rr \<le> 0 \<or> ln (1 + rr) \<le> rr * 2 / (2 + rr)"
       by blast (* 0.0 ms *)
     have ff18: "rr * (2 + rr) < rr * (2 + rr * 2) \<or> 2 + rr \<le> 0 \<or> rr * (2 + rr * 2) / (2 + rr) \<le> rr"

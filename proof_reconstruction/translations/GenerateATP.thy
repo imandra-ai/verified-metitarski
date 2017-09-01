@@ -75,7 +75,8 @@ fun isar_proof (st : thm) (ctxt : Proof.context)  =
     (*Read the tptp proof into an ATP_Proof*)  
     val atp_proof = TPTP_Proof_to_atp_proof.tptp_proof_to_atp_proof atp_problem tptp_proof
     (*Need to deal with the case MT gives up*)
-   
+    val _ = @{print} atp_proof   
+
     (*Termify the formulas in the atp_proof*)  
     val termified_atp_proof : (term, string) ATP_Proof.atp_step list 
         = Termify_atp_proof.termify_atp_proof atp_proof;
