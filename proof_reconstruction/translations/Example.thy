@@ -1,8 +1,9 @@
 theory Example
-  imports Main Real Transcendental 
+  imports Main Real Transcendental
     "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsGeneral"
     "../../../PSL/PSL"
     "~~/src/HOL/Library/Sum_of_Squares"
+    "~~/src/HOL/Eisbach/Eisbach"
 begin
  
 declare[[ML_print_depth=50]]  
@@ -70,26 +71,40 @@ lemma "1 / 2 * (1 + 5 * (X_000060::real)) * (X_000060 - 1) = - 1 / 2 + X_000060 
   done
     
 strategy MTSimp = Dynamic(Simp) 
-    
+ 
+(* Eisbach *)
+method mt_arith = ((simp add: divide_simps split: if_splits); sos?) 
+  
 lemma "True"
 proof -
   {
     fix rr :: real
     assume "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
-    then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"
-        by sos  
-      
-    have " \<And>r ra.\<not> (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) \<le> r \<or> r \<le> 0 \<or> ra \<le> (X::real)"  
-      sorry
-    then have " \<And>r ra. (r::real) < (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2) \<or> r \<le> 0 \<or> ra \<le> (X::real)"
-      by sos
-      find_proof MTSimp
-      apply (simp  add: arith)
+    then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"  
+      apply (mt_arith)
+      apply sos  
+      apply ((simp add: divide_simps split: if_splits); sos?)
+        apply sos
+       apply sos
+      apply sos
         
+      done
+        
+      
+    have " \<And>r ra X.\<not> (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) \<le> r \<or> r \<le> 0 \<or> ra \<le> (X::real)"  
+      sorry
+    then have " \<And>r ra X. (r::real) < (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2) \<or> r \<le> 0 \<or> ra \<le> (X::real)"
+      apply (simp add: divide_simps)
+      apply(atomize)    (*need to get rid of \<And> to apply if_splits*)
+      apply (simp  split: if_splits)  
+        (*apply sos*)
+(*      find_proof MTSimp
+      apply (simp  add: arith)
+*)
+(*        
       using [[simp_trace_new mode=full]]
       using [[simp_break "?x \<or> ?y"]]
-      apply(auto)
-      sorry
+*)
         
     have "\<And>r ra. \<not> lgen False (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) r "  
       sorry
@@ -97,9 +112,7 @@ proof -
       using [[simp_trace_new mode=full]]
       apply - 
       apply (simp  add: arith)
-        
-      apply(auto)
-      done 
+      sorry
   }
   then show ?thesis
      sorry
