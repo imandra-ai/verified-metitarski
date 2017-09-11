@@ -3,8 +3,6 @@ theory LnBounds
     (*Path to the special function bounds afp entry. 
       The method from the afp website for making this a relative path didn't work!*)
     AxiomsGeneral "~~/../Documents/afp/Special_Function_Bounds/Log_CF_Bounds"
-    "../../PSL/PSL"
-    "~~/src/HOL/Library/Sum_of_Squares"
 begin
   
   lemma ln_lower_bound_cf1: "\<not> 0 < x
