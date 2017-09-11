@@ -73,17 +73,28 @@ lemma "1 / 2 * (1 + 5 * (X_000060::real)) * (X_000060 - 1) = - 1 / 2 + X_000060 
 strategy MTSimp = Dynamic(Simp) 
  
 (* Eisbach *)
-method mt_arith = ((simp add: divide_simps split: if_splits); sos?) 
+method mt_arith = ((simp add: divide_simps split: if_splits); (sos?))
+
+notepad
+begin
+  fix rr :: real
+  assume assm: "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+  then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"
+    apply (simp add: divide_simps split: if_splits)
+    using assm
+      apply(match premises in I: P for P \<Rightarrow> \<open>thin_tac P\<close>) 
+      apply -
+      apply sos
+end
   
 lemma "True"
 proof -
   {
     fix rr :: real
-    assume "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
-    then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"  
-      apply (mt_arith)
-      apply sos  
+    assume assm: "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+    then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0" 
       apply ((simp add: divide_simps split: if_splits); sos?)
+        using assm
         apply sos
        apply sos
       apply sos
@@ -117,5 +128,22 @@ proof -
   then show ?thesis
      sorry
 qed    
+
+notepad
+begin
+  
+  assume "A & B"
+  then have A and B 
+     apply (simp, simp)  
+    done
+
+  assume "A & B"
+  then have A and B 
+     apply simp 
+    apply simp 
+    done     
+      
+end
+  
   
 end

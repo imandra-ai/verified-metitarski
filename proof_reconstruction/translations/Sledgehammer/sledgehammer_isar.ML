@@ -246,7 +246,7 @@ val metitarski_resolution_methods = [Metis_Method (NONE, NONE)] @ basic_simp_bas
 (*Handle the MT canonicalize steps separately*)
 val metitarski_canonicalize_methods = [Auto_Method]
 (*For MT arithmetic steps*)
-val metitarski_arithmetic_methods = [Simp_Method, Auto_Method]
+val metitarski_arithmetic_methods = [Sorry_Method] (*[Simp_Method, Auto_Method]*)
 (*For subst steps*)
 val metitarski_subst_methods = [Auto_Method, Blast_Method]
 

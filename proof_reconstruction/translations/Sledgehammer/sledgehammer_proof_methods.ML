@@ -24,7 +24,8 @@ sig
     Linarith_Method |
     Presburger_Method |
     Algebra_Method |
-    Sos_Method
+    Sos_Method |
+    Sorry_Method
 
   datatype play_outcome =
     Played of Time.time |
@@ -65,7 +66,8 @@ datatype proof_method =
   Linarith_Method |
   Presburger_Method |
   Algebra_Method |
-  Sos_Method
+  Sos_Method  |
+  Sorry_Method
 
 datatype play_outcome =
   Played of Time.time |
@@ -111,7 +113,8 @@ fun string_of_proof_method ctxt ss meth =
       | Linarith_Method => "linarith"
       | Presburger_Method => "presburger"
       | Algebra_Method => "algebra"
-      |Sos_Method => "sos")
+      | Sos_Method => "sos"
+      | Sorry_Method => "sorry")
   in
     maybe_paren (space_implode " " (meth_s :: ss))
   end
@@ -147,7 +150,8 @@ fun tac_of_proof_method ctxt (local_facts, global_facts) meth =
       | Linarith_Method => Lin_Arith.tac ctxt
       | Presburger_Method => Cooper.tac true [] [] ctxt
       | Algebra_Method => Groebner.algebra_tac [] [] ctxt
-      | Sos_Method => SOS_Wrapper.sos_tac ctxt NONE)))  (*SOS with no certificate for now*)
+      | Sos_Method => SOS_Wrapper.sos_tac ctxt NONE (*SOS with no certificate for now*)
+      | Sorry_Method => (fn _ => all_tac))))  (*Returns some tactic. Is this the identity tactic?*)
 
 fun string_of_play_outcome (Played time) = string_of_ext_time (false, time)
   | string_of_play_outcome (Play_Timed_Out time) =
