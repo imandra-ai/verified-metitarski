@@ -1,7 +1,6 @@
 theory Example
   imports Main Real Transcendental
     "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsGeneral"
-    "../../../PSL/PSL"
     "~~/src/HOL/Library/Sum_of_Squares"
     "~~/src/HOL/Eisbach/Eisbach"
 begin
@@ -70,18 +69,16 @@ lemma "1 / 2 * (1 + 5 * (X_000060::real)) * (X_000060 - 1) = - 1 / 2 + X_000060 
   apply(simp add: algebra_simps divide_simps)
   done
     
-strategy MTSimp = Dynamic(Simp) 
  
 (* Eisbach *)
-method mt_arith = ((simp add: divide_simps split: if_splits); sos)
+method mt_arith = ((simp add: divide_simps split: if_splits); use nothing in sos)
 
 notepad
 begin
   fix rr :: real
   assume assm: "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
   then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"
-    apply(insert assm)
-    apply(simp add: divide_simps split: if_splits)
+    apply(simp add: divide_simps split: if_splits)  
     apply sos+  
     done
 end
@@ -92,8 +89,7 @@ proof -
     fix rr :: real
     assume assm: "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
     then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0" 
-      apply ((insert assm, simp add: divide_simps split: if_splits); sos)        
-      done
+      by mt_arith
         
       
     have " \<And>r ra X.\<not> (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) \<le> r \<or> r \<le> 0 \<or> ra \<le> (X::real)"  

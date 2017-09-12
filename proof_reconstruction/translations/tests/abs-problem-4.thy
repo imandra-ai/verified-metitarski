@@ -6,7 +6,7 @@ begin
 strategy MTSimp = Thens[Dynamic(Auto), IsSolved]   
   
 lemma "\<forall>(X::real).((Not((X <= -1)) --> (((2 * abs(X)) / (2 + X)) <= abs(ln((1 + X))))))" 
-  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+  apply(tactic {*fn st => (writeln (isar_proof st [] @{context}); Seq.single st) *})
 proof -
   { fix rr :: real
     have ff1: "rr * (3 + rr * (5 / 2)) * (2 + rr) < rr * (6 + rr * (8 + rr * 2)) \<or> 2 + rr \<le> 0 \<or> rr * (6 + rr * (8 + rr * 2)) / (2 + rr) \<le> rr * (3 + rr * (5 / 2))"

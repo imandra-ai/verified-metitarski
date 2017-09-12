@@ -40,7 +40,7 @@ ML_file "termify_atp_proof.ML"
 
   
 ML\<open>
-fun isar_proof (st : thm) (ctxt : Proof.context)  =
+fun isar_proof (st : thm) (mt_args : string list) (ctxt : Proof.context)  =
   let
 
     (*Getting the name of a theorem*)
@@ -69,7 +69,7 @@ fun isar_proof (st : thm) (ctxt : Proof.context)  =
 
     (*Give it to Metitarski*)  
     (*mt_path comes from config.ML*)
-    val tptp_proof = Call_Metitarski.call_mt MT_Config.mt_path MT_Config.problem_path tptp_problem
+    val tptp_proof = Call_Metitarski.call_mt MT_Config.mt_path MT_Config.problem_path tptp_problem mt_args
     val _ = @{print} tptp_proof
 
     (*Read the tptp proof into an ATP_Proof*)  
@@ -129,7 +129,7 @@ named_theorems metitarski_simps "arithmetic simplification rules used by Metitar
 declare power2_eq_square[metitarski_simps]     
   
 lemma foo1: "\<forall>(Y::real).0 <= Y^2 "
-  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+  apply(tactic {*fn st => (writeln (isar_proof st [] @{context}); Seq.single st) *})
 proof -
   { fix rr :: real
     have "\<not> 0 < rr * (rr * - 1)"
@@ -144,7 +144,7 @@ qed
 
 lemma foo2: "\<forall>(Y::real).0 <= abs(Y^3)"
 (*  ML_val{*writeln (isar_proof (#goal @{Isar.goal}) @{context})*}*)
-  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+  apply(tactic {*fn st => (writeln (isar_proof st [] @{context}); Seq.single st) *})
 proof -
   { fix rr :: real
     have ff1: "0 \<le> rr * (rr * rr) \<or> \<bar>rr * (rr * rr)\<bar> = - (rr * (rr * rr))"
@@ -196,7 +196,7 @@ proof -
 qed
  
 lemma foo3: "\<forall>(X::real) (Y::real).X+Y \<le> abs (X+Y)"     
-  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+  apply(tactic {*fn st => (writeln (isar_proof st [] @{context}); Seq.single st) *})
 proof -
   { fix rr :: real and rra :: real
     have ff1: "0 \<le> rr + rra \<or> \<bar>rr + rra\<bar> = - (rr + rra)"

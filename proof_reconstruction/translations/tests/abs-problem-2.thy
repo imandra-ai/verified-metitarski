@@ -3,7 +3,7 @@ theory "abs-problem-2"
 begin
   
 lemma "abs-problem-2": "\<forall>(X::real).(((abs(X) <= 1/2) --> (abs((ln((1 + X)) - X)) <= (2 * power X 2))))" 
-  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+  apply(tactic {*fn st => (writeln (isar_proof st [] @{context}); Seq.single st) *})
 proof -
   { fix rr :: real
     have ff1: "rr < rr * (1 + rr * - 2) * (1 + rr) \<or> rr * (1 + rr * - 2) \<le> rr / (1 + rr) \<or> 1 + rr \<le> 0"

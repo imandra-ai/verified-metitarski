@@ -1,5 +1,4 @@
-%fof(Conjecture,conjecture, ![X] : (~(X <= 0) & (X <= (582811643 / 1000000000)) => (abs(ln((1 - X))) <= ((3 * X) / 2)))).
-fof(abs_problem_3,conjecture, ! [X] : ((0 < X & X <= 0.582811643) => abs(ln(1-X)) <= 3*X/2) ).
+fof(Conjecture,conjecture, ![X] : (![Y] : ((0 <= X) & (X <= 1) & (0 <= Y) & (Y <= 1) => (exp((X + Y)) <= ((exp(X) * exp(Y)) + pow(2, -8) ))))).
 
 include('Axioms/general.ax').
 include('Axioms/abs.ax').

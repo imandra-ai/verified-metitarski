@@ -4,7 +4,7 @@ begin
   
 lemma "\<forall>(X::real).((Not((1 <= abs(X))) --> (abs(cos(X)) <= 1)))
 " 
-  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+  apply(tactic {*fn st => (writeln (isar_proof st [] @{context}); Seq.single st) *})
 proof -
   { fix rr :: real
     have ff1: "\<And>r ra. \<not> lgen False ra (cos r) \<or> ra \<le> cos r"

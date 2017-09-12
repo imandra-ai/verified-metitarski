@@ -1,12 +1,12 @@
 signature CALL_METITARSKI =
 sig
-  val call_mt : string -> string -> string-> string
+  val call_mt : string -> string -> string -> string list -> string
 end;
 
 structure Call_Metitarski : CALL_METITARSKI =
 struct
 
-fun call_mt (mt_path : string) (problem_path : string) (tptp_problem : string) :string =
+fun call_mt (mt_path : string) (problem_path : string) (tptp_problem : string) (mt_args : string list) :string =
   let    
     (*Write the tptp_problem to a file*)
     fun write (file : string) (text : string) =
@@ -21,7 +21,7 @@ fun call_mt (mt_path : string) (problem_path : string) (tptp_problem : string) :
     val _ = write problem_path tptp_problem
     
     (*Run MT on this problem*)
-    val mt_args = ["-p", "--cases", "0", "--autoInclude", "--tstp", problem_path];
+    val mt_args = mt_args @ ["-p", "--cases", "0", "--autoInclude", "--tstp", problem_path];
     
     val mt_process = Unix.execute(mt_path, mt_args)
     

@@ -3,7 +3,7 @@ theory "abs-problem-1"
 begin
   
 lemma "abs-problem-1": "\<forall>(X::real).(0\<le>X \<longrightarrow> abs(ln(1+X)-X) \<le> X^2)"
-  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+  apply(tactic {*fn st => (writeln (isar_proof st [] @{context}); Seq.single st) *})
 proof -
   { fix rr :: real
     have ff1: "rr < rr * (1 + rr * - 1) * (1 + rr) \<or> rr * (1 + rr * - 1) \<le> rr / (1 + rr) \<or> 1 + rr \<le> 0"

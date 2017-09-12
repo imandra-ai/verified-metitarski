@@ -3,7 +3,7 @@ theory "cos-problem-4"
 begin
   
 lemma "\<forall>(X::real).((((0 <= X) \<and> (X <= pi)) --> (cos(X) <= 1)))"
-  apply(tactic {*fn st => (writeln (isar_proof st @{context}); Seq.single st) *})
+  apply(tactic {*fn st => (writeln (isar_proof st [] @{context}); Seq.single st) *})
 proof -
   { fix rr :: real
     have ff1: "\<And>r ra. \<not> lgen False (cos ra) r \<or> cos ra \<le> r"
