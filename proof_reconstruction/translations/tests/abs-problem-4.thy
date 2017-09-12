@@ -1,9 +1,6 @@
 theory "abs-problem-4"
   imports "../GenerateATP"
-          "../../../../PSL/PSL"
-begin
-
-strategy MTSimp = Thens[Dynamic(Auto), IsSolved]   
+begin 
   
 lemma "\<forall>(X::real).((Not((X <= -1)) --> (((2 * abs(X)) / (2 + X)) <= abs(ln((1 + X))))))" 
   apply(tactic {*fn st => (writeln (isar_proof st [] @{context}); Seq.single st) *})

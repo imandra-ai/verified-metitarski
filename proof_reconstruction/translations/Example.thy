@@ -83,41 +83,40 @@ begin
     done
 end
   
-lemma "True"
-proof -
-  {
-    fix rr :: real
-    assume assm: "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
-    then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0" 
-      by mt_arith
+notepad
+begin
+  fix rr :: real
+  assume assm: "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
+  then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0" 
+    by mt_arith
+end      
         
+notepad
+begin  
+  have " \<And>r ra X.\<not> (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) \<le> r \<or> r \<le> 0 \<or> ra \<le> (X::real)"  
+    sorry
+  then have " \<And>r ra X. (r::real) < (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2) \<or> r \<le> 0 \<or> ra \<le> (X::real)"
+    apply (simp add: divide_simps)
+    apply (atomize)    (*need to get rid of \<And> to apply if_splits*)
+    apply (simp  split: if_splits)
+      apply(sos)
+    sorry
       
-    have " \<And>r ra X.\<not> (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) \<le> r \<or> r \<le> 0 \<or> ra \<le> (X::real)"  
-      sorry
-    then have " \<And>r ra X. (r::real) < (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2) \<or> r \<le> 0 \<or> ra \<le> (X::real)"
-      apply (simp add: divide_simps)
-      apply(atomize)    (*need to get rid of \<And> to apply if_splits*)
-      apply (simp  split: if_splits)  
-        (*apply sos*)
-(*      find_proof MTSimp
-      apply (simp  add: arith)
-*)
 (*        
-      using [[simp_trace_new mode=full]]
-      using [[simp_break "?x \<or> ?y"]]
+    using [[simp_trace_new mode=full]]
+    using [[simp_break "?x \<or> ?y"]]
 *)
-        
-    have "\<And>r ra. \<not> lgen False (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) r "  
-      sorry
-    then have "\<And>r ra. (r::real) < (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2)"
-      using [[simp_trace_new mode=full]]
-      apply - 
-      apply (simp  add: arith)
-      sorry
-  }
-  then show ?thesis
-     sorry
-qed    
+end      
+   
+notepad
+begin
+  have "\<And>r ra. \<not> lgen False (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) r "  
+    sorry
+  then have "\<And>r ra. (r::real) < (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2)"
+    using [[simp_trace_new mode=full]]
+    apply - 
+    apply (simp  add: arith)
+    sorry
+end    
 
-  
 end

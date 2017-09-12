@@ -391,6 +391,7 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                 |> HOLogic.mk_Trueprop |> finish_off
 
             fun maybe_show outer c = if outer andalso eq_set (op =) (c, conjs) then [Show] else []
+            (*fun is_show outer c : bool = outer andalso eq_set (op =) (c, conjs)*)
 
             fun isar_steps outer predecessor accum [] =
                 accum
@@ -406,6 +407,7 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                 let
                   val l = label_of_clause c
                   val t = prop_of_clause c
+                  (*val _ = @{print} t*)
                   val rule = rule_of_clause_id id
                   val skolem = is_skolemize_rule rule
 
@@ -443,8 +445,13 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                        else if is_metitarski_canonicalize_rule rule then metitarski_canonicalize_methods                       
                        else systematic_methods')
                       |> massage_methods)
-
-                  fun prove sub facts = Prove (maybe_show outer c, [], l, t, sub, facts, meths, "")
+               
+                  fun prove sub facts = 
+                    Prove (maybe_show outer c, [], l, 
+                     (* if String.isSubstring "metitarski" banner andalso is_show outer c
+                        then Var (("thesis", 0), @{typ bool})
+                        else*) t, 
+                      sub, facts, meths, "")
                   fun steps_of_rest step = isar_steps outer (SOME l) (step :: accum) infs
                 in
                   if is_clause_tainted c then
@@ -477,7 +484,10 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                   val l = label_of_clause c
                   val t = prop_of_clause c
                   val step =
-                    Prove (maybe_show outer c, [], l, t,
+                    Prove (maybe_show outer c, [], l, 
+                      (*if String.isSubstring "metitarski" banner andalso is_show outer c
+                        then Var (("thesis", 0), @{typ bool})
+                        else*) t,
                       map isar_case (filter_out (null o snd) cases),
                       sort_facts (the_list predecessor, []), massage_methods systematic_methods',
                       "")
