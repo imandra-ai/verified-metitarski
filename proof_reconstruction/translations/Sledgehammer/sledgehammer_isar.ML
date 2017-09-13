@@ -391,7 +391,9 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                 |> HOLogic.mk_Trueprop |> finish_off
 
             fun maybe_show outer c = if outer andalso eq_set (op =) (c, conjs) then [Show] else []
-            (*fun is_show outer c : bool = outer andalso eq_set (op =) (c, conjs)*)
+
+            fun is_show outer c : bool = outer andalso eq_set (op =) (c, conjs)
+            val thesis_var = ((Auto_Bind.thesisN, 0), HOLogic.boolT)
 
             fun isar_steps outer predecessor accum [] =
                 accum
@@ -445,12 +447,13 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                        else if is_metitarski_canonicalize_rule rule then metitarski_canonicalize_methods                       
                        else systematic_methods')
                       |> massage_methods)
-               
-                  fun prove sub facts = 
+
+                  fun prove sub facts =
+                    (*When reconstructing a metitarski proof, always use ?thesis in the "show" step*)
                     Prove (maybe_show outer c, [], l, 
-                     (* if String.isSubstring "metitarski" banner andalso is_show outer c
-                        then Var (("thesis", 0), @{typ bool})
-                        else*) t, 
+                      if String.isSubstring "metitarski" banner andalso is_show outer c
+                        then HOLogic.mk_Trueprop (Var thesis_var)
+                        else t, 
                       sub, facts, meths, "")
                   fun steps_of_rest step = isar_steps outer (SOME l) (step :: accum) infs
                 in
@@ -484,10 +487,11 @@ fun isar_proof_text ctxt debug num_chained isar_proofs smt_proofs isar_params
                   val l = label_of_clause c
                   val t = prop_of_clause c
                   val step =
+                    (*When reconstructing a metitarski proof, always use ?thesis in the "show" step*)
                     Prove (maybe_show outer c, [], l, 
-                      (*if String.isSubstring "metitarski" banner andalso is_show outer c
-                        then Var (("thesis", 0), @{typ bool})
-                        else*) t,
+                      if String.isSubstring "metitarski" banner andalso is_show outer c
+                        then HOLogic.mk_Trueprop (Var thesis_var)
+                        else t,
                       map isar_case (filter_out (null o snd) cases),
                       sort_facts (the_list predecessor, []), massage_methods systematic_methods',
                       "")
