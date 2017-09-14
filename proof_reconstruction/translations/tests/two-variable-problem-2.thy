@@ -1,5 +1,6 @@
 theory "two-variable-problem-2"
   imports "../GenerateATP"
+    "~/Documents/internship/verified-metitarski/isabelle-proofs/ExpBounds"
 begin
  
 (* SOS takes more than 5 sec*)  

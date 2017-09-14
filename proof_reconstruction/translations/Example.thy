@@ -76,10 +76,21 @@ method mt_arith = ((simp add: divide_simps split: if_splits); use nothing in sos
 notepad
 begin
   fix rr :: real
+  have "rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) = 
+    (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr)))"
+    by(algebra)
+end  
+  
+  
+notepad
+begin
+  fix rr :: real
   assume assm: "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
   then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"
-    apply(simp add: divide_simps split: if_splits)  
-    apply sos+  
+    apply(subgoal_tac "rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) = 
+    (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr)))")
+     apply(auto)
+      apply(algebra)
     done
 end
   
@@ -96,6 +107,10 @@ begin
   have " \<And>r ra X.\<not> (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) \<le> r \<or> r \<le> 0 \<or> ra \<le> (X::real)"  
     sorry
   then have " \<And>r ra X. (r::real) < (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2) \<or> r \<le> 0 \<or> ra \<le> (X::real)"
+    apply(subgoal_tac "\<forall>ra. (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) = 
+      (- 5 / 2 + ra * (2 + ra * (1 / 2))) / (1 + ra * 2)")
+    try0    
+    
     apply (simp add: divide_simps)
     apply (atomize)    (*need to get rid of \<And> to apply if_splits*)
     apply (simp  split: if_splits)

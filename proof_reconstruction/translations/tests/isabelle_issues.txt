@@ -1,0 +1,7 @@
+Problems with the Isabelle/Isar proofs reconstructed from MT proofs
+
+
+-----------------------------------------------------
+cos-problem-4
+
+refute_0_12: "pi" in fed into "decision". SOS doesn't accept "pi". Would the Isabelle RCF decision procedure accept "pi"?
