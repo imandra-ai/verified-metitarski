@@ -2,6 +2,9 @@
   Not only during "arithmetic" steps but also introduced when pretty-printing.
   These will hopefully be picked up by automated proof methods in Isar proofs.*)
 
+(* Without these some of the proofs fail ! *)
+
+
 theory Arithmetic
   imports Main Real AxiomsGeneral
 begin

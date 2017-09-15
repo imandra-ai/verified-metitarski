@@ -25,7 +25,8 @@ sig
     Presburger_Method |
     Algebra_Method |
     Sos_Method |
-    Sorry_Method
+    Sorry_Method |
+    MT_Arith_Method
 
   datatype play_outcome =
     Played of Time.time |
@@ -67,7 +68,8 @@ datatype proof_method =
   Presburger_Method |
   Algebra_Method |
   Sos_Method  |
-  Sorry_Method
+  Sorry_Method |
+  MT_Arith_Method
 
 datatype play_outcome =
   Played of Time.time |
@@ -114,7 +116,8 @@ fun string_of_proof_method ctxt ss meth =
       | Presburger_Method => "presburger"
       | Algebra_Method => "algebra"
       | Sos_Method => "sos"
-      | Sorry_Method => "sorry")
+      | Sorry_Method => "sorry"
+      | MT_Arith_Method => "mt_arith_rule")
   in
     maybe_paren (space_implode " " (meth_s :: ss))
   end
@@ -151,7 +154,10 @@ fun tac_of_proof_method ctxt (local_facts, global_facts) meth =
       | Presburger_Method => Cooper.tac true [] [] ctxt
       | Algebra_Method => Groebner.algebra_tac [] [] ctxt
       | Sos_Method => SOS_Wrapper.sos_tac ctxt NONE (*SOS with no certificate for now*)
-      | Sorry_Method => (fn _ => all_tac))))  (*Returns some tactic. Is this the identity tactic?*)
+      | Sorry_Method => (fn _ => all_tac)  (*Returns some tactic. Is this the identity tactic?*)
+      (*Need to insert the proper tactic for the Eisbach mt_arith_rule method.
+        Otherwise it cannot be preplayed.*)
+      | MT_Arith_Method => (fn _ => all_tac))))
 
 fun string_of_play_outcome (Played time) = string_of_ext_time (false, time)
   | string_of_play_outcome (Play_Timed_Out time) =
