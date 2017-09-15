@@ -112,14 +112,15 @@ begin
     sorry
 end    
 
-method mt_algebra = (simp; fail | simp add: field_simps)  
+(* Fails if the simplification doesn't discharge the goal it was applied to*)  
+method mt_simp = (simp; fail | simp add: field_simps; fail)  
   
 notepad
 begin
   fix rr :: real
   assume "\<not> 0 < rr * rr \<and> \<not> rr \<le> - 1"
   then have "\<not> rr < rr * (1 + rr) \<and> \<not> 1 + rr \<le> 0"
-    by mt_algebra
+    by mt_simp
 end  
   
 notepad
@@ -127,7 +128,7 @@ begin
   fix rr :: real
   assume "\<not> ln (1 + rr) < rr * (1 + rr * - 2) \<and> \<not> rr \<le> ln (1 + rr)"
   then have "\<not> rr * (rr * 2) < - (rr * - 1 + ln (1 + rr)) \<and> \<not> 0 \<le> rr * - 1 + ln (1 + rr)"
-    by mt_algebra   
+    by mt_simp   
 end
   
 notepad
@@ -150,29 +151,65 @@ begin
       apply(algebra)
     done
 end  
+
+(* The | in match doesn't work ! *)  
+  
+(*lemma "A \<Longrightarrow> A \<and> (B \<longrightarrow> B)"
+by (match premises in H : A \<Rightarrow> \<open> intro conjI , rule H , rule impI ,
+      match premises (local) in A \<Rightarrow> \<open> fail \<close>
+                              | H 0 : B \<Rightarrow> \<open> rule H 0 \<close>\<close> )  
+  
+method match_test = (match premises in "A \<or> B" for A and B \<Rightarrow> \<open>rule disjE\<close>
+                                      |"A \<and> B" for A and B \<Rightarrow> \<open>rule conjE\<close>)  
+*)  
+
+
+(*Nees the "|simp" because algebra chokes when the two sides are already in the same form.*)  
+method subst_left_less = 
+  (match premises in "\<not> a < b" for a :: real and b :: real \<Rightarrow> 
+    \<open>match conclusion in "\<not> a' < b" for a' :: real \<Rightarrow> 
+      \<open>rule ssubst [where ?s=a and ?t=a'], (algebra|simp)\<close>\<close>)
+
+method subst_left_less_eq = 
+  (match premises in "\<not> a \<le> b" for a :: real and b :: real \<Rightarrow> 
+    \<open>match conclusion in "\<not> a' \<le> b" for a' :: real \<Rightarrow> 
+      \<open>rule ssubst [where ?s=a and ?t=a'], (algebra|simp)\<close>\<close>)
+    
+method subst_right_less =
+  (match premises in "\<not> a < b" for a :: real and b :: real \<Rightarrow> 
+    \<open>match conclusion in "\<not> a < b'" for b' :: real \<Rightarrow> 
+      \<open>rule ssubst [where ?s=b and ?t=b'], (algebra|simp)\<close>\<close>)
+    
+method subst_right_less_eq =
+  (match premises in "\<not> a \<le> b" for a :: real and b :: real \<Rightarrow> 
+    \<open>match conclusion in "\<not> a \<le> b'" for b' :: real \<Rightarrow> 
+      \<open>rule ssubst [where ?s=b and ?t=b'], (algebra|simp)\<close>\<close>)    
+
+method mt_algebra = ((subst_left_less|subst_left_less_eq), (subst_right_less|subst_right_less_eq), assumption)    
+
+method mt_arith_drule_conj = (mt_simp | (drule conjE, assumption)+, mt_algebra)
+
+(* rule automatically chooses conjI *)
+(* Need the | in case the inequality that requires algebra is the last one *)  
+method mt_arith_rule = 
+  (-, ((use nothing in rule, use nothing in mt_arith_drule_conj) | use nothing in mt_arith_drule_conj)+)
   
 notepad
 begin
   fix rr :: real
   assume assm: "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
   then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"
-    apply ( -, use nothing in rule)
-     apply(mt_algebra)
-    apply(use nothing in rule)
-     apply(drule conjE, assumption)
-      back
-     apply(drule conjE, assumption)
-       
-       apply(match premises in "\<not> a < b" for a :: real and b :: real \<Rightarrow> 
-          \<open>match conclusion in "\<not> a' < b" for a' :: real \<Rightarrow> 
-            \<open>rule ssubst [where ?s=a and ?t=a'], (algebra|simp)\<close>\<close>)
-       apply(match premises in "\<not> a < b" for a :: real and b :: real \<Rightarrow> 
-          \<open>match conclusion in "\<not> a < b'" for b' :: real \<Rightarrow> 
-            \<open>rule ssubst [where ?s=b and ?t=b'], (algebra|simp)\<close>\<close>)   
-       apply(assumption)
-      apply(mt_algebra)
-      done
+    by mt_arith_rule
         
 end
+ 
+(*Check mt_arith_rule works when the hard inequality is the last one*)  
+notepad
+begin
+  fix rr :: real
+  have "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1 \<Longrightarrow>
+    \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr)"
+    by mt_arith_rule
+end  
   
 end
