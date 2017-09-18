@@ -162,36 +162,42 @@ by (match premises in H : A \<Rightarrow> \<open> intro conjI , rule H , rule im
 method match_test = (match premises in "A \<or> B" for A and B \<Rightarrow> \<open>rule disjE\<close>
                                       |"A \<and> B" for A and B \<Rightarrow> \<open>rule conjE\<close>)  
 *)  
-
+method div_simp = (simp add: divide_simps split: if_splits) 
+  
+method div_simp_ifsplit = (simp add: divide_simps split: if_split, algebra)  
 
 (*Nees the "|simp" because algebra chokes when the two sides are already in the same form.*)  
 method subst_left_less = 
   (match premises in "\<not> a < b" for a :: real and b :: real \<Rightarrow> 
     \<open>match conclusion in "\<not> a' < b'" for a' :: real and b'::real \<Rightarrow> 
-      \<open>rule ssubst [where ?s=a and ?t=a'], (simp; fail | algebra)\<close>\<close>)
+      \<open>(rule ssubst [where ?s=a and ?t=a'], (simp; fail | algebra)) | div_simp; mt_simp?; fail\<close>\<close>)
 
 method subst_left_less_eq = 
   (match premises in "\<not> a \<le> b" for a :: real and b :: real \<Rightarrow> 
     \<open>match conclusion in "\<not> a' \<le> b'" for a' :: real and b'::real \<Rightarrow> 
-      \<open>rule ssubst [where ?s=a and ?t=a'], (simp; fail | algebra)\<close>\<close>)
+      \<open>(rule ssubst [where ?s=a and ?t=a'], (simp; fail | algebra)) | div_simp; mt_simp?; fail\<close>\<close>)
     
 method subst_right_less =
   (match premises in "\<not> a < b" for a :: real and b :: real \<Rightarrow> 
     \<open>match conclusion in "\<not> a < b'" for b' :: real \<Rightarrow> 
-      \<open>rule ssubst [where ?s=b and ?t=b'], (simp; fail | algebra)\<close>\<close>)
+      \<open>(rule ssubst [where ?s=b and ?t=b'], (simp; fail | algebra)) | div_simp; mt_simp?; fail\<close>\<close>)
     
 method subst_right_less_eq =
   (match premises in "\<not> a \<le> b" for a :: real and b :: real \<Rightarrow> 
     \<open>match conclusion in "\<not> a \<le> b'" for b' :: real \<Rightarrow> 
-      \<open>rule ssubst [where ?s=b and ?t=b'], (simp; fail | algebra)\<close>\<close>)    
+      \<open>(rule ssubst [where ?s=b and ?t=b'], (simp; fail | algebra)) | div_simp; mt_simp?; fail\<close>\<close>)    
 
-method mt_algebra = ((subst_left_less|subst_left_less_eq), (subst_right_less|subst_right_less_eq), assumption)    
+method mt_algebra = ((subst_left_less|subst_left_less_eq),
+      (subst_right_less|subst_right_less_eq),  assumption)    
 
 (*Useful when something is moved to the other side of an inequality.
-  An example is in two-variable-problem-1.tptp*)  
-method div_simp = (simp add: divide_simps split: if_splits)  
+  An example is in two-variable-problem-1.tptp
+
+  assume "\<not> ln (rra / rr) \<le> (rra + rr * - 1) / (rra * (1 / 2) + rr * (1 / 2)) \<and> \<not> rr \<le> rra * - 1"
+  then have "\<not> ln (rra / rr) * (rra * (1 / 2) + rr * (1 / 2)) \<le> rra + rr * - 1"
+*)   
   
-method mt_arith_drule_conj = (mt_simp | ((drule conjE, assumption)+, (mt_algebra | div_simp; mt_simp) ))
+method mt_arith_drule_conj = (mt_simp | (((drule conjE), assumption)+, mt_algebra))
   
 (* rule automatically chooses conjI *)
 (* Need the | in case the inequality that requires algebra is the last one *)  
@@ -204,7 +210,15 @@ begin
   fix rr :: real
   assume assm: "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
   then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"
-    by mt_arith_rule
+    apply -
+      apply rule
+     apply(erule conjE)+
+     apply simp
+      apply rule
+     apply(erule conjE)+
+     apply(subst_left_less|subst_left_less_eq)  
+      apply(algebra)
+    (*by mt_arith_rule*)
         
 end
  
@@ -236,7 +250,8 @@ begin
   then have "(rra * (rra * (5 / 2)) + rr * (rra * - 2 + rr * (- 1 / 2))) / (rra * rra + rr * (rra * 2))
     = (- 1 / 2 + rra / rr * (- 2 + rra / rr * (5 / 2))) / (rra / rr * (2 + rra / rr))"
     apply -
-    apply(simp add: divide_simps split: if_split, algebra?)
+      apply(erule conjE)
+    apply(simp add: divide_simps split: if_split, algebra)
     done
       
 end  
@@ -248,12 +263,20 @@ begin
   assume "\<not> (rra * (rra * (5 / 2)) + rr * (rra * - 2 + rr * (- 1 / 2))) / (rra * rra + rr * (rra * 2)) \<le> (rra + rr * - 1) / (rra * (1 / 2) + rr * (1 / 2)) (*\<and> \<not> rra / rr \<le> 0*) \<and> rr * rr \<noteq> 0 \<and> rr \<noteq> 0"
   then have "\<not> (- 1 / 2 + rra / rr * (- 2 + rra / rr * (5 / 2))) / (rra / rr * (2 + rra / rr)) \<le> (rra + rr * - 1) / (rra * (1 / 2) + rr * (1 / 2)) (*\<and> \<not> rra / rr \<le> 0*)"
     apply -
-    apply(drule conjE)
-     apply(assumption)
-      apply(mt_algebra)
+    apply(erule conjE)+
+    apply(match premises in  "\<not> a \<le> b" for a :: real and b :: real \<Rightarrow> 
+        \<open>match conclusion in "\<not> a' \<le> b'" for a' :: real and b'::real \<Rightarrow> 
+          \<open>rule ssubst [where ?s=a and ?t=a']\<close>\<close>, div_simp_ifsplit)
+     (* div_simp_ifsplit doesn't work inside the match, 
+        but it should go there in order for subst_left to work *)   
+        apply(assumption)
+     (* Needs if_split NOT if_splits *)     
+    done
+      
 end
  
-(*terms moved from one side of the inequlity to another*)  
+(*terms moved from one side of the inequlity to another.
+  Incorporated in mt_arith_rule*)  
 notepad
 begin
   fix rr :: real
