@@ -32,3 +32,9 @@ polypaver-bench-sqrt
 
 MT hangs
 
+
+---------------------------------------------------------------------
+exp-problem-1
+
+Termifying the ATP proof takes very long. Probably because it contains very large numbers, which are converted very inefficiently to Isabelle Num.
+

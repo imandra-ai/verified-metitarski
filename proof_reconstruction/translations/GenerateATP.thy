@@ -81,7 +81,9 @@ fun isar_proof (st : thm) (mt_args : string list) (ctxt : Proof.context)  =
     (*Termify the formulas in the atp_proof*)  
     val termified_atp_proof : (term, string) ATP_Proof.atp_step list 
         = Termify_atp_proof.termify_atp_proof atp_proof;
-     
+    val _ = @{print} "TERMIFIED ATP PROOF:"
+    val _ = @{print} termified_atp_proof      
+
     (*Using isar_proof_text instead*)  
     val ctxt : Proof.context = ctxt
     val debug : bool = true
