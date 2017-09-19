@@ -38,3 +38,20 @@ exp-problem-1
 
 Termifying the ATP proof takes very long. Probably because it contains very large numbers, which are converted very inefficiently to Isabelle Num.
 
+
+---------------------------------------------------------------------
+exp-fun-ineq-b
+exp-fun-ineq-b-corrected
+
+Very slow with these options. MT hangs
+
+
+---------------------------------------------------------------------
+log-fun-ineq-f
+
+Involves two variables so sos hangs on some steps.
+There is also a step where mt_arith_rule fails:
+
+assume "¬ 1 < rr ∧ ¬ rr ≤ 0"
+then have "¬ 0 < ln rr * exp 1"
+

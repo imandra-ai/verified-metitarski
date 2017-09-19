@@ -7,7 +7,7 @@ theory Example
 begin
  
 declare[[ML_print_depth=50]]  
-  
+    
 ML
 \<open>@{term "\<And>(X_000043::real) X_000044. X_000044 < - 1 + X_000043"}\<close>
 

@@ -94,7 +94,7 @@ fun fix_bound_vars_atp_formula (var_list : string list)
 
 (*Will this work for the large numbers MT uses?! 
   It takes very long when working with the approximations of pi*)
-fun num_of_int (i : int) : term =
+(*fun num_of_int (i : int) : term =
   let
     fun inc (num : term) : term =
       (case num of
@@ -113,7 +113,35 @@ fun num_of_int (i : int) : term =
   in
     num_of_int_tail_rec i (Const ("Num.num.One", @{typ "num"}))
   end
-  
+*)
+    (*Not tail-recursive*) 
+fun 
+    num_of_int 1 = Const ("Num.num.One", @{typ "num"})
+  | num_of_int n =
+      if n>1 then
+        (case n mod 2 of
+          0 => Const ("Num.num.Bit0", @{typ "num \<Rightarrow> num"}) $ (num_of_int (n div 2))
+        | 1 => Const ("Num.num.Bit1", @{typ "num \<Rightarrow> num"}) $ (num_of_int (n div 2))
+        | _ => error ("This number cannot be converted to a numeral: " ^ (Int.toString n))
+        )
+      else error ("This number cannot be converted to a numeral: " ^ (Int.toString n))
+    
+
+      (* Tail recursive *)
+(*    fun int_to_binary (n : int) : char list =
+      let
+        fun int_to_binary_aux 0   acc = acc
+          | int_to_binary_aux num acc = 
+              (case (Char.fromString (String.toString (num mod 2))) of
+                SOME c => int_to_binary_aux (num div 2) (c :: acc)
+              | NONE => error "Not a binary digit."
+              )              
+      in
+        int_to_binary_aux n []
+      end
+*)
+
+ 
 (*Made type of all Free variables real*)
 fun atp_term_to_term (atp_term : (string, string ATP_Problem.atp_type) ATP_Problem.atp_term) 
   : term =
