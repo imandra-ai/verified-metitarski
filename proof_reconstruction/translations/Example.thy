@@ -82,7 +82,9 @@ begin
     by mt_arith
 end      
         
-notepad
+notepad    then have "\<And>r ra. ra < - 1 \<or> \<not> lgen False r (1 + ra) \<or> r \<le> exp ra"
+      using ff13 by metis (* 4 ms *)
+    then have "\<And>r ra. (1::real) + ra < r \<or> ra < - 1 \<or> r \<le> exp ra"
 begin  
   have " \<And>r ra X.\<not> (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) \<le> r \<or> r \<le> 0 \<or> ra \<le> (X::real)"  
     sorry
@@ -339,6 +341,19 @@ begin
       \<open>(rule ssubst [where ?s=a and ?t=a'], (simp add: divide_simps split: if_split, use I in algebra))\<close>\<close>)
 *)    
     (*This throws an error so we should be trying div_simps first*)
+end  
+
+declare zero_less_mult_iff [metitarski_simps]  
+  
+notepad
+begin
+  fix rr :: real
+  assume "\<not> 1 < rr \<and> \<not> rr \<le> 0"
+  then have "\<not> 0 < ln rr * exp 1"
+    apply -
+    sledgehammer[prover = e] (add: ln_gt_zero_imp_gt_one mult_nonneg_nonpos2)
+    apply mt_simp
+      done 
 end  
   
 end
