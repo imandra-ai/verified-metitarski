@@ -163,7 +163,7 @@ by (match premises in H : A \<Rightarrow> \<open> intro conjI , rule H , rule im
 method match_test = (match premises in "A \<or> B" for A and B \<Rightarrow> \<open>rule disjE\<close>
                                       |"A \<and> B" for A and B \<Rightarrow> \<open>rule conjE\<close>)  
 *)  
-method div_simp = (simp add: divide_simps split: if_splits) 
+method div_simp = (simp add: divide_simps split: if_splits; mt_simp?; fail) 
   
 method div_simp_ifsplit = (simp add: divide_simps split: if_split, algebra)  
 
@@ -227,8 +227,9 @@ method mt_arith_drule_conj = (mt_simp | ((erule conjE)+, mt_algebra))
 (* rule automatically chooses conjI *)
 (* Need the | in case the inequality that requires algebra is the last one *)  
 method mt_arith_rule = 
-  (-, ((((use nothing in rule, use nothing in mt_arith_drule_conj) | use nothing in mt_arith_drule_conj)+) 
-        | use nothing in div_simp))
+  (-, (use nothing in div_simp | 
+      (((use nothing in rule, use nothing in mt_arith_drule_conj) | use nothing in mt_arith_drule_conj)+) 
+      ))
 
       
 (* Adding '(simp add: divide_simps split: if_split, use I in algebra)' to the innermost match 
@@ -318,8 +319,26 @@ begin
   fix rr :: real
   have "\<not> rr * (- 3 + rr * (- 1 / 2)) < rr * (- 6 + rr * - 4) / (2 + rr) \<Longrightarrow>
     \<not> rr * 2 / (2 + rr) * (3 + rr * 2) < rr * (3 + rr * (1 / 2))"
-    apply(div_simp; mt_simp)
+    apply(div_simp)
     done
+end
+
+notepad
+begin
+  fix rr :: real
+  assume "\<not> rr * 2 / (2 + rr) < ln (1 + rr) \<and> \<not> 0 \<le> rr \<and> \<not> rr \<le> - 2"
+  then have "\<not> rr * 2 < ln (1 + rr) * (2 + rr) \<and> \<not> 0 \<le> rr"
+    apply -
+    apply mt_arith_rule
+    done
+      
+(*    apply rule
+     apply(erule conjE)+
+      apply(match premises in "\<not> a < b" and I: A for A and a :: real and b :: real \<Rightarrow> 
+    \<open>match conclusion in "\<not> a' < b'" for a' :: real and b'::real \<Rightarrow>
+      \<open>(rule ssubst [where ?s=a and ?t=a'], (simp add: divide_simps split: if_split, use I in algebra))\<close>\<close>)
+*)    
+    (*This throws an error so we should be trying div_simps first*)
 end  
   
 end
