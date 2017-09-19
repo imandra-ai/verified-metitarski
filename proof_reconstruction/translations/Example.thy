@@ -3,6 +3,7 @@ theory Example
     "~/Documents/internship/verified-metitarski/isabelle-proofs/AxiomsGeneral"
     "~~/src/HOL/Library/Sum_of_Squares"
     "~~/src/HOL/Eisbach/Eisbach"
+    "~~/src/HOL/Eisbach/Eisbach_Tools"
 begin
  
 declare[[ML_print_depth=50]]  
@@ -168,31 +169,51 @@ method div_simp_ifsplit = (simp add: divide_simps split: if_split, algebra)
 
 (*Nees the "|simp" because algebra chokes when the two sides are already in the same form.*)  
 method subst_left_less = 
-  (match premises in "\<not> a < b" and I: A for A and a :: real and b :: real \<Rightarrow> 
+  (match premises in "\<not> a < b" for a :: real and b :: real \<Rightarrow> 
     \<open>match conclusion in "\<not> a' < b'" for a' :: real and b'::real \<Rightarrow> 
-      \<open>(rule ssubst [where ?s=a and ?t=a'], (simp; fail | algebra | 
-                    (simp add: divide_simps split: if_split, use I in algebra)))\<close>\<close>)
+      \<open>(rule ssubst [where ?s=a and ?t=a'], (simp; fail | algebra))\<close>\<close>)
 
+(*To deal with the case where algebra needs an extra premise*)    
+method subst_left_less_side_cond =
+  (match premises in "\<not> a < b" and I: A for A and a :: real and b :: real \<Rightarrow> 
+    \<open>match conclusion in "\<not> a' < b'" for a' :: real and b'::real \<Rightarrow>
+      \<open>(rule ssubst [where ?s=a and ?t=a'], (simp add: divide_simps split: if_split, use I in algebra))\<close>\<close>)
+    
 method subst_left_less_eq = 
-  (match premises in "\<not> a \<le> b" and I: A for A and a :: real and b :: real \<Rightarrow> 
+  (match premises in "\<not> a \<le> b" for a :: real and b :: real \<Rightarrow> 
     \<open>match conclusion in "\<not> a' \<le> b'" for a' :: real and b'::real \<Rightarrow> 
-      \<open>(rule ssubst [where ?s=a and ?t=a'], (simp; fail | algebra |
-                    (simp add: divide_simps split: if_split, use I in algebra)))\<close>\<close>)
+      \<open>(rule ssubst [where ?s=a and ?t=a'], (simp; fail | algebra))\<close>\<close>)
+ 
+method subst_left_less_eq_side_cond =
+  (match premises in "\<not> a \<le> b" and I: A for A and a :: real and b :: real \<Rightarrow> 
+    \<open>match conclusion in "\<not> a' \<le> b'" for a' :: real and b'::real \<Rightarrow>
+      \<open>(rule ssubst [where ?s=a and ?t=a'], (simp add: divide_simps split: if_split, use I in algebra))\<close>\<close>)
     
 method subst_right_less =
-  (match premises in "\<not> a < b" and I: A for A and a :: real and b :: real \<Rightarrow> 
+  (match premises in "\<not> a < b" for a :: real and b :: real \<Rightarrow> 
     \<open>match conclusion in "\<not> a < b'" for b' :: real \<Rightarrow> 
-      \<open>(rule ssubst [where ?s=b and ?t=b'], (simp; fail | algebra |
-                    (simp add: divide_simps split: if_split, use I in algebra)))\<close>\<close>)
+      \<open>(rule ssubst [where ?s=b and ?t=b'], (simp; fail | algebra))\<close>\<close>)
+    
+method subst_right_less_side_cond =
+  (match premises in "\<not> a < b" and I: A for A and a :: real and b :: real \<Rightarrow> 
+    \<open>match conclusion in "\<not> a < b'" for b'::real \<Rightarrow>
+      \<open>(rule ssubst [where ?s=b and ?t=b'], (simp add: divide_simps split: if_split, use I in algebra))\<close>\<close>)
     
 method subst_right_less_eq =
-  (match premises in "\<not> a \<le> b" and I: A for A and a :: real and b :: real \<Rightarrow> 
+  (match premises in "\<not> a \<le> b" for a :: real and b :: real \<Rightarrow> 
     \<open>match conclusion in "\<not> a \<le> b'" for b' :: real \<Rightarrow> 
-      \<open>(rule ssubst [where ?s=b and ?t=b'], (simp; fail | algebra |
-                    (simp add: divide_simps split: if_split, use I in algebra)))\<close>\<close>)    
+      \<open>(rule ssubst [where ?s=b and ?t=b'], (simp; fail | algebra))\<close>\<close>)    
 
-method mt_algebra = ((subst_left_less|subst_left_less_eq),
-      (subst_right_less|subst_right_less_eq),  assumption)    
+method subst_right_less_eq_side_cond =
+  (match premises in "\<not> a \<le> b" and I: A for A and a :: real and b :: real \<Rightarrow> 
+    \<open>match conclusion in "\<not> a \<le> b'" for b'::real \<Rightarrow>
+      \<open>(rule ssubst [where ?s=b and ?t=b'], (simp add: divide_simps split: if_split, use I in algebra))\<close>\<close>)
+    
+method mt_algebra = (((subst_left_less|subst_left_less_side_cond) | 
+                      (subst_left_less_eq|subst_left_less_eq_side_cond)),
+                     ((subst_right_less|subst_right_less_side_cond) | 
+                      (subst_right_less_eq|subst_right_less_eq_side_cond)), 
+                    assumption)    
 
 (*Useful when something is moved to the other side of an inequality.
   An example is in two-variable-problem-1.tptp
@@ -208,23 +229,31 @@ method mt_arith_drule_conj = (mt_simp | ((erule conjE)+, mt_algebra))
 method mt_arith_rule = 
   (-, ((((use nothing in rule, use nothing in mt_arith_drule_conj) | use nothing in mt_arith_drule_conj)+) 
         | use nothing in div_simp))
-  
+
+      
+(* Adding '(simp add: divide_simps split: if_split, use I in algebra)' to the innermost match 
+   causes this simplification to always occur and algebra to throw an error.
+   Thereforem put '(simp add: divide_simps split: if_split, use I in algebra)' in a separate match,
+   that also picks out an extra premise. Only one though! *)      
 notepad
 begin
   fix rr :: real
   assume assm: "\<not> rr < 0 \<and> \<not> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr)) < rr * 2 / (2 + rr) \<and> \<not> rr \<le> - 1"
   then have "\<not> rr < 0 \<and> \<not> (- 1 / 2 + (1 + rr) * (- 2 + (1 + rr) * (5 / 2))) / ((1 + rr) * (2 + (1 + rr))) < rr * 2 / (2 + rr) \<and> \<not> 1 + rr \<le> 0"
+    by mt_arith_rule
     (*apply -
       apply rule
      apply(erule conjE)+
-     apply simp
-      apply rule
+     apply (subst_left_less, subst_right_less, assumption)
+    apply rule
      apply(erule conjE)+
-     apply(subst_left_less|subst_left_less_eq)  
-      apply(algebra)*)
-    apply mt_arith_rule
-    by mt_arith_rule
-        
+      apply (match premises in "\<not> a < b" for a :: real and b :: real \<Rightarrow> 
+    \<open>match conclusion in "\<not> a' < b'" for a' :: real and b'::real \<Rightarrow> 
+      \<open>(rule ssubst [where ?s=a and ?t=a'], (simp; fail | algebra )) \<close>\<close> |
+    match premises in "\<not> a < b" and I: A for A and a :: real and b :: real \<Rightarrow> 
+    \<open>match conclusion in "\<not> a' < b'" for a' :: real and b'::real \<Rightarrow>
+      \<open>(rule ssubst [where ?s=a and ?t=a'], (simp add: divide_simps split: if_split, use I in algebra))\<close>\<close>)
+   *)         
 end
  
 (*Check mt_arith_rule works when the hard inequality is the last one*)  
