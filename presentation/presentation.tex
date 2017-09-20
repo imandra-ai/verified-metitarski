@@ -4,11 +4,12 @@
 \usepackage{graphicx}
 \usepackage{tikz}
 
-\usetikzlibrary{positioning, arrows.meta, calc, fit, trees, shapes}
+\usetikzlibrary{positioning, arrows.meta, calc, fit, shapes, decorations.pathreplacing, backgrounds}
 \tikzstyle{fancytitle} =[fill=white, text=black, draw]
 
 \definecolor{colorThree}{HTML}{CC6633}
 \definecolor{tikzDarkGreen}{HTML}{006622}
+\definecolor{tikzBack}{HTML}{e0e0eb}
 
 \setbeamertemplate{note page}[plain]
 %\setbeameroption{show notes}
@@ -96,7 +97,7 @@
 \item Automatic proof tool in Isabelle.
 	\note[item] {It turns out there is a tool in Isabelle that does something similar. Isabelle is an \textit{interactive} theorem prover so it normally requires a lot of user input to do a proof, the user has to specify what steps should be taken. Sledgehammer aims to improve automation.}
 	
-	\note[item] {Sledgehammer tries to automatically find a proof for the given lemma without any user input. What it does is it calls a bunch of ATPs and tries to translate their proofs into Isabelle proofs. Which is exctly what I need to do.}
+	\note[item] {Sledgehammer tries to automatically find a proof for the given lemma without any user input. What it does is it calls a bunch of ATPs and tries to translate their proofs into Isabelle proofs. Which is exactly what I need to do.}
 
 \item Sledgehammer operation:
 \end{itemize}
@@ -154,6 +155,106 @@
 \frametitle{The Translation}
 	\note[item] {I'm going to focus first on the left side of the diagram before. The part I said was prover specific.}
 	\note[item] {Because Isabelle is written in SML, any code that wants to access the Isabelle internals, for example the internal representation of lemmas, needs to go through SML. So all of the code for this diagram is in SML.}
+
+\begin{figure}
+\scalebox{0.4}{
+\begin{tikzpicture}
+\node (atpProb) [align = center, text width = 1.5cm, draw, line width=1pt] {\textcolor{black}{\\ATP Problem}};
+\node (atpProbTitle) [fancytitle, above=-0.27cm, line width=1pt, fill=tikzBack] at (atpProb.north) {ML};
+
+\node (isa) [align = center, text width = 2cm, draw, rounded corners, line width=1pt, below=1.5cm of atpProb] {\\Theorem};
+\node (isaTitle) [fancytitle, rounded corners, above=-0.27cm, line width=1pt, fill=tikzBack] at (isa.north) {Isabelle};
+
+\node (atp) [circle, align = center, text width = 1.5cm, draw, line width=1pt, right=2.5cm of atpProb] {ATP};
+
+\node (atpProof) [align = center, text width = 1.5cm, draw, line width=1pt, right=2.5cm of atp] {\\ATP Proof};
+\node (atpProofTitle) [fancytitle, above=-0.27cm, line width=1pt] at (atpProof.north) {ML};
+
+\node (isaProof) [align = center, text width = 2cm, draw, rounded corners, line width=1pt, below=1.5cm of atpProof] {\\Proof};
+\node (isaProofTitle) [fancytitle, rounded corners, above=-0.27cm, line width=1pt] at (isaProof.north) {Isabelle};
+
+\draw[-{Latex},line width=1.5pt, black]
+	(isaTitle) edge (atpProb);
+
+\draw[-{Latex},line width=1.3pt, black]
+	(atpProb) edge
+		node [align = center, text width = 1.5cm, above] {translate} 
+	(atp);
+	
+\draw[-{Latex},line width=1.3pt, black]
+	(atp) edge
+		node (trans) [align = center, text width = 1.5cm, above] {translate} 
+	(atpProof);	
+
+\draw[-{Latex},line width=1.5pt, black]
+	(atpProof) edge (isaProofTitle);
+
+\begin{scope}[on background layer]
+\node (box1) [fit={($(isa)+(-1.3cm, -0.5cm)$) ($(trans)-(-0.6cm, 0cm)$) ($(atpProbTitle)+(0cm, 0.5cm)$)}, draw, rounded corners, color=colorThree, line width = 1pt, fill=tikzBack] {};
+\end{scope}
+
+%\node [align = center, text width = 3cm, below=0cm of box1] {Prover Specific};
+
+\node (box2) [fit={(isaProof) ($(isaProofTitle)+(0cm, -0.89cm)$) ($(atpProofTitle)+(0cm, 0.5cm)$)}, draw, rounded corners, color=tikzDarkGreen, line width = 1pt] {};
+
+%\node [align = center, text width = 2cm, below=0cm of box2] {Reuse for MetiTarski!};
+
+%arrow
+\draw[-{Latex[width=2cm, length=1cm]},line width=20pt, colorThree]
+	($(box1.south)+(0, -0.5cm)$) -- ++(0, -3cm);
+
+\end{tikzpicture}
+}
+
+\scalebox{0.7}{
+\begin{tikzpicture}
+\node (atpProb) [align = center, text width = 3cm, draw, line width=1pt] {\\ATP Problem (first-order term)};
+\node (atpProbTitle) [fancytitle, above=-0.27cm, line width=1pt] at (atpProb.north) {ML datatype};
+
+\node (isa) [align = center, text width = 3.3cm, draw, line width=1pt, below=2.5cm of atpProb] {\\Theorem\\ (higher-order term)};
+\node (isaTitle) [fancytitle, above=-0.27cm, line width=1pt] at (isa.north) {Isabelle Term};
+
+\node (tptpProb) [align = center, text width = 1.5cm, draw, line width=1pt, right= of atpProb] {\\TPTP Problem};
+\node (tptpProbTitle) [fancytitle, above=-0.27cm, line width=1pt] at (tptpProb.north) {String};
+
+\node (atp) [circle, align = center, text width = 1.6cm, draw, line width=1pt, right=1cm of tptpProb] {MetiTarski};
+
+\node (tptpProof) [align = center, text width = 1.5cm, draw, line width=1pt, right=1cm of atp] {\\TPTP Proof};
+\node (tptpProofTitle) [fancytitle, above=-0.27cm, line width=1pt] at (tptpProof.north) {String};
+
+\node (atpProof) [align = center, text width = 3cm, draw, line width=1pt, right=1.5cm of tptpProof] {\\ATP Proof (first-order terms)};
+\node (atpProofTitle) [fancytitle, above=-0.27cm, line width=1pt] at (atpProof.north) {ML datatype};
+
+\node (atpProofTerm) [align = center, text width = 3.3cm, draw, line width=1pt, below=2.5cm of atpProof] {\\ATP Proof\\ (higher-order terms)};
+\node (atpProofTermTitle) [fancytitle, above=-0.27cm, line width=1pt] at (atpProofTerm.north) {ML datatype};
+
+\draw[-{Latex},line width=1.5pt, black]
+	(isaTitle) edge (atpProb);
+	
+\draw[-{Latex},line width=1.5pt, black]
+	(atpProb) edge (tptpProb);
+	
+\draw[-{Latex},line width=1.5pt, black]
+	(tptpProb) edge (atp);
+	
+\draw[-{Latex},line width=1.5pt, black]
+	(atp) edge (tptpProof);
+	
+\draw[-{Latex},line width=1.5pt, black]
+	(tptpProof) edge (atpProof);
+	
+\draw[-{Latex},line width=1.5pt, black]
+	(atpProof) edge (atpProofTermTitle);
+	
+%brace
+\draw[decoration={brace,raise=0.2cm, amplitude=0.4cm, mirror},decorate, line width = 2pt, color=tikzDarkGreen]
+	  (tptpProof.south) -- 
+	  	node[align = center, below=0.5cm, text width=2.5cm] {Reuse from Sledgehammer} 
+	  ($(atpProof.south west)+(0.5cm, 0cm)$);						
+\end{tikzpicture}
+}	
+\end{figure}	
+	
 \end{frame}
 
 \begin{frame}
