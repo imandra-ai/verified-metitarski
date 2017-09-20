@@ -115,8 +115,7 @@ fun fix_bound_vars_atp_formula (var_list : string list)
   end
 *)
     (*Not tail-recursive*) 
-fun 
-    num_of_int 1 = Const ("Num.num.One", @{typ "num"})
+fun num_of_int 1 = Const ("Num.num.One", @{typ "num"})
   | num_of_int n =
       if n>1 then
         (case n mod 2 of
