@@ -1,32 +1,40 @@
 theory "abs-problem-4"
   imports "../GenerateATP"
 begin 
+
+(* apply(tactic {*fn st => (writeln (isar_proof st [] @{context}); Seq.single st) *})*)  
   
-lemma "\<forall>(X::real).((Not((X <= -1)) --> (((2 * abs(X)) / (2 + X)) <= abs(ln((1 + X))))))" 
-  apply(tactic {*fn st => (writeln (isar_proof st [] @{context}); Seq.single st) *})
+lemma "\<forall>(X::real).((\<not>((X \<le> -1)) \<longrightarrow> (((2 * abs(X)) / (2 + X)) \<le> abs(ln((1 + X))))))" 
 proof -
   { fix rr :: real
-    have ff1: "rr * (3 + rr * (5 / 2)) * (2 + rr) < rr * (6 + rr * (8 + rr * 2)) \<or> 2 + rr \<le> 0 \<or> rr * (6 + rr * (8 + rr * 2)) / (2 + rr) \<le> rr * (3 + rr * (5 / 2))"
+    have ff1: "rr * (3 + rr * (5 / 2)) * (2 + rr) < rr * (6 + rr * (8 + rr * 2)) \<or> 2 + rr \<le> 0 
+      \<or> rr * (6 + rr * (8 + rr * 2)) / (2 + rr) \<le> rr * (3 + rr * (5 / 2))"
       using leq_left_divide_mul_pos by blast (* 8 ms *)
-    have ff2: "rr * (3 + rr * (5 / 2)) < rr * 2 / (2 + rr) * (3 + rr * (4 + rr)) \<or> 3 + rr * (4 + rr) \<le> 0 \<or> rr * 2 / (2 + rr) \<le> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr))"
+    have ff2: "rr * (3 + rr * (5 / 2)) < rr * 2 / (2 + rr) * (3 + rr * (4 + rr)) 
+      \<or> 3 + rr * (4 + rr) \<le> 0 \<or> rr * 2 / (2 + rr) \<le> rr * (3 + rr * (5 / 2)) / (3 + rr * (4 + rr))"
       using leq_right_divide_mul_pos by blast (* 4 ms *)
     have ff3: "rr < 0 \<or> \<bar>rr\<bar> = rr"
       using abs_nonnegative by blast (* 0.0 ms *)
     have "\<bar>ln (1 + rr)\<bar> < rr * 2 / (2 + rr) \<or> \<bar>rr\<bar> \<noteq> rr \<or> \<bar>rr\<bar> * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
       by auto (* 20 ms *)
-    then have ff4: "rr < 0 \<or> \<bar>ln (1 + rr)\<bar> < rr * 2 / (2 + rr) \<or> \<bar>rr\<bar> * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
+    then have ff4: "rr < 0 \<or> \<bar>ln (1 + rr)\<bar> < rr * 2 / (2 + rr) 
+      \<or> \<bar>rr\<bar> * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
       using ff3 by fastforce (* 0.0 ms *)
     have ff5: "ln (1 + rr) < 0 \<or> \<bar>ln (1 + rr)\<bar> = ln (1 + rr)"
       using abs_nonnegative by blast (* 0.0 ms *)
-    have "ln (1 + rr) < rr * 2 / (2 + rr) \<or> \<bar>ln (1 + rr)\<bar> \<noteq> ln (1 + rr) \<or> rr * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
+    have "ln (1 + rr) < rr * 2 / (2 + rr) \<or> \<bar>ln (1 + rr)\<bar> \<noteq> ln (1 + rr) 
+      \<or> rr * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
       by auto (* 12 ms *)
-    then have ff6: "ln (1 + rr) < 0 \<or> ln (1 + rr) < rr * 2 / (2 + rr) \<or> rr * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
+    then have ff6: "ln (1 + rr) < 0 \<or> ln (1 + rr) < rr * 2 / (2 + rr) 
+      \<or> rr * 2 / (2 + rr) \<le> \<bar>ln (1 + rr)\<bar>"
       using ff5 by fastforce (* 0.0 ms *)
     have ff7: "\<And>r ra. \<not> lgen False ra (ln r) \<or> ra \<le> ln r"
       using lgen_le_neg by auto (* 0.0 ms *)
-    have "\<And>r ra. \<not> lgen False ra (1 / 2 * (1 + 5 * r) * (r - 1) / (r * (2 + r))) \<or> r \<le> 0 \<or> lgen False ra (ln r)"
+    have "\<And>r ra. \<not> lgen False ra (1 / 2 * (1 + 5 * r) * (r - 1) / (r * (2 + r))) \<or> r \<le> 0 
+      \<or> lgen False ra (ln r)"
       using ln_lower_bound_cf3 by blast (* 4 ms *)
-    then have "\<And>r ra. \<not> lgen False ra (1 / 2 * (1 + 5 * r) * (r - 1) / (r * (2 + r))) \<or> r \<le> 0 \<or> ra \<le> ln r"
+    then have "\<And>r ra. \<not> lgen False ra (1 / 2 * (1 + 5 * r) * (r - 1) / (r * (2 + r))) 
+      \<or> r \<le> 0 \<or> ra \<le> ln r"
       using ff7 by blast (* 12 ms *)
     then have "\<And>r ra. (- (1::real) / 2 + ra * (- 2 + ra * (5 / 2))) / (ra * (2 + ra)) < r \<or> ra \<le> 0 \<or> r \<le> ln ra"
       by mt_arith_rule (* failed *)

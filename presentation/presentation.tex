@@ -14,6 +14,7 @@
 %\setbeameroption{show notes}
 
 \title[Reconstructing MetiTarski Proofs in Isabelle]{Reconstructing MetiTarski Proofs in Isabelle/HOL}
+\subtitle {End-of-internship Presentation}
 \author{Cristina Matache}
 \institute[]{\includegraphics[scale=0.45]{ai_logo_title}}
 \date{September 22, 2017}
@@ -72,8 +73,17 @@
 
 \begin{frame}
 \frametitle{The Problem}
-Side by side picture of an MT and Isabelle proofs
-	\note[item]{We need to turn this MT proof into an Isabelle proof. You don't need to read all of this, the point is that MT ouputs the steps in a proof, and we want to translate each step to to a "have" in Isabelle. In Isabelle you can specify intermediate proof steps using "have".}
+
+\begin{minipage}{0.3\linewidth}
+\includegraphics[scale=0.2]{MT_proof}
+\end{minipage}
+\hfill
+\begin{minipage}{0.57\linewidth}
+\includegraphics[scale=0.18]{isabelle_proof}
+\end{minipage}
+
+%Side by side picture of an MT and Isabelle proofs
+	\note[item]{We need to turn this MT proof into an Isabelle proof. You don't need to read all of this, the point is that MT ouputs the steps in a proof, and we want to translate each step to to a "have" in Isabelle. In Isabelle you can specify intermediate proof steps using "have". Each accompanied by a proof method.}
 \end{frame}
 
 \section{Sledgehammer}
