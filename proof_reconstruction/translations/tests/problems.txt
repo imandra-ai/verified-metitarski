@@ -40,6 +40,10 @@ Termifying the ATP proof takes very long. Probably because it contains very larg
 
 But SOS hangs on some univariate steps involving large numbers. Why?
 
+  assume "¬ rr < - 1 ∧ ¬ - 1 < rr * (rr * - 1) ∧ ¬ 1 < rr * rr"
+  then have "¬ 1 + rr < exp rr * (1 + rr * (rr * - 1))"
+
+mt_arith_rule fails on this step. It doesn't fit into the expected pattern and I haven't found anything I can add to metitarski_simps to solve the goal only by simplification.
 
 ---------------------------------------------------------------------
 exp-fun-ineq-b

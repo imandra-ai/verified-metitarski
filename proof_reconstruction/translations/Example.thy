@@ -353,5 +353,19 @@ begin
     apply mt_simp
       done 
 end  
+
+notepad
+begin
+  fix rr :: real
+  assume "\<not> rr < - 1 \<and> \<not> - 1 < rr * (rr * - 1) \<and> \<not> 1 < rr * rr"
+  then have "\<not> 1 + rr < exp rr * (1 + rr * (rr * - 1))"
+    apply(simp add: field_simps metitarski_simps)
+      sorry
+  (*  by (smt mult.assoc mult_cancel_right2)
+    using diff_less_eq by auto
+    using not_exp_less_zero by fastforce
+    using less_diff_eq by auto
+  *)
+end  
   
 end
