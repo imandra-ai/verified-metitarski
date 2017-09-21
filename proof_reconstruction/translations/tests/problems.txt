@@ -36,7 +36,9 @@ MT hangs
 ---------------------------------------------------------------------
 exp-problem-1
 
-Termifying the ATP proof takes very long. Probably because it contains very large numbers, which are converted very inefficiently to Isabelle Num.
+Termifying the ATP proof takes very long. Probably because it contains very large numbers, which are converted very inefficiently to Isabelle Num. --- Now fixed!
+
+But SOS hangs on some univariate steps involving large numbers. Why?
 
 
 ---------------------------------------------------------------------
@@ -56,7 +58,7 @@ assume "¬ 1 < rr ∧ ¬ rr ≤ 0"
 then have "¬ 0 < ln rr * exp 1"
 
 
------------------------------------------------------
+---------------------------------------------------------------------
 cos-problem-4
 
 refute_0_12: "pi" in fed into "decision". SOS doesn't accept "pi". Would the Isabelle RCF decision procedure accept "pi"?

@@ -156,8 +156,13 @@ fun tac_of_proof_method ctxt (local_facts, global_facts) meth =
       | Sos_Method => SOS_Wrapper.sos_tac ctxt NONE (*SOS with no certificate for now*)
       | Sorry_Method => (fn _ => all_tac)  (*Returns some tactic. Is this the identity tactic?*)
       (*Need to insert the proper tactic for the Eisbach mt_arith_rule method.
-        Otherwise it cannot be preplayed.*)
-      | MT_Arith_Method => (fn _ => all_tac))))
+        Exmple.thy needsto be imported before loading this file, 
+        otherwise the antquotation won't work! 
+        The int argument is not used but needed to obtain the correct type. Not sure why it's needed.*)
+      | MT_Arith_Method => 
+          (fn (_ : int) => Method.NO_CONTEXT_TACTIC ctxt
+            (Method_Closure.apply_method ctxt @{method "mt_arith_rule"} [] [] [] ctxt []))
+      )))
 
 fun string_of_play_outcome (Played time) = string_of_ext_time (false, time)
   | string_of_play_outcome (Play_Timed_Out time) =
