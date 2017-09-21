@@ -1,3 +1,6 @@
 \beamer@endinputifotherversion {3.36pt}
-\beamer@sectionintoc {1}{MetiTarski}{3}{0}{1}
-\beamer@sectionintoc {2}{Sledgehammer}{8}{0}{2}
+\beamer@sectionintoc {1}{MetiTarski --- The Problem}{3}{0}{1}
+\beamer@sectionintoc {2}{Approach}{6}{0}{2}
+\beamer@subsectionintoc {2}{1}{Translation}{7}{0}{2}
+\beamer@subsectionintoc {2}{2}{Proof Generation}{8}{0}{2}
+\beamer@sectionintoc {3}{Summary}{10}{0}{3}

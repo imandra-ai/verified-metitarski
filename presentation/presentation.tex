@@ -12,7 +12,7 @@
 \definecolor{tikzBack}{HTML}{e0e0eb}
 
 \setbeamertemplate{note page}[plain]
-\setbeameroption{show notes}
+%\setbeameroption{show notes}
 
 \title[Reconstructing MetiTarski Proofs in Isabelle]{Reconstructing MetiTarski Proofs in Isabelle/HOL}
 \subtitle {End-of-internship Presentation}
@@ -34,41 +34,52 @@
 \tableofcontents
 \end{frame}
 
-\section{MetiTarski}
+\section{MetiTarski --- The Problem}
 
 \begin{frame}
 \frametitle{MetiTarski}
 \begin{itemize}
-\item Automatic theorem prover (ATP)
+\setlength\itemsep{1em}
+\item Automatic theorem prover (ATP).
+	\note[item] {This means that the user doesn't need to do anything. Just pushes a button ans waits for the proof.}
 \item Proves universally quantified inequalites involving:
+	\vspace{0.5em}
 	\begin{itemize}
+	\setlength\itemsep{1em}
 	\item polynomials
 	\item real-valued special functions: $log$, $exp$, $sin$, $cos$, $sqrt$ etc.
 	\end{itemize}
 \item Using:
+	\vspace{0.5em}
 	\begin{itemize}
+	\setlength\itemsep{1em}
 	\item resolution
-	\item a decision procedure for the theory of real closed fields (RCF)
+	\item a decision procedure for the theory of real closed fields (RCF).
 	\end{itemize}
-\item The special functions are \textit{approximated} by polynomials. So Metitarski is incomplete. (Without the approximations, the problem is undecidable.)			
+\item Special functions are \textit{approximated} by polynomials. 
+	\note[item]{So Metitarski is incomplete. There are some inequalities that are true but it cannot prove. (But without the approximations, the problem is undecidable.)}			
 \end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Motivation}
 
-\begin{itemize}
-\item Long-term goal: use MetiTarski inside Imandra to solve geometric problems
+\begin{block}{Long-term Goal}
+Use MetiTarski inside Imandra to solve geometric problems.
+\end{block}
 	\note[item]{These can be encoded as inequalities that MT understands.}
-	
-\item Why translate MetiTarski proofs to Isabelle proofs?
+
+\vspace{1cm}	
+Why translate MetiTarski proofs to Isabelle proofs?
+\vspace{0.5em}
 	\note[item]{If we want to use MT to verify things, we need very high confidence in its proofs.}
 \begin{itemize}
-\item No formal guarantee that the MetiTarski proofs are correct.
+\setlength\itemsep{1em}
+\item No formal guarantee of correctness.
 	\note[item]{MetiTarski was coded in Standard ML and there is no guarantee the code or the output is correct. Although it has of course been tested.}
-\item Isabelle is more trustworthy than MetiTarski
-\item If proof reconstruction is available, MetiTarski can be included as an automated tool in Isabelle
-\end{itemize}
+\item Isabelle is more trustworthy.
+\item Integrate MetiTarski into Isabelle.
+	\note[item] {If proof reconstruction is available, MetiTarski can be included as an automated tool in Isabelle.}
 \end{itemize}
 \end{frame}
 
@@ -88,7 +99,7 @@
 	\note[item]{In Isabelle, the way you do proofs is you can specify intermmediate steps, prove them, and then use them later to prove your conclusion. To prove things you need to specify a proof method, there are maybe 10-15 that are commonly used. And sometimes you have to give Isabelle hints about what lemmas to use.}
 \end{frame}
 
-\section{Sledgehammer}
+\section{Approach}
 
 \begin{frame}
 \frametitle{Sledgehammer}
@@ -138,7 +149,7 @@
 
 \node (box1) [fit={($(isa)+(-1.3cm, -0.5cm)$) ($(trans)-(-0.6cm, 0cm)$) ($(atpProbTitle)+(0cm, 0.5cm)$)}, draw, rounded corners, color=colorThree, line width = 1pt] {};
 
-\node [align = center, text width = 3cm, below=0cm of box1] {Prover Specific};
+\node [align = center, text width = 3cm, below=0cm of box1] {Prover-specific};
 
 \node (box2) [fit={(isaProof) ($(isaProofTitle)+(0cm, -0.89cm)$) ($(atpProofTitle)+(0cm, 0.5cm)$)}, draw, rounded corners, color=tikzDarkGreen, line width = 1pt] {};
 
@@ -151,6 +162,8 @@
 	\note[item] {The left part of the diagram is specific to every prover, because to get the ATP proof we need some information about how the initial Isabelle lemma was encoded. And this of course depends on each prover. But the right part of the diagram does not depend on the prover. And it is actually the more involved part. So the idea was to somehow reuse this part when reconstructing Metitarski proofs.}
 
 \end{frame}
+
+\subsection{Translation}
 
 \begin{frame}
 \frametitle{Translations}
@@ -205,7 +218,7 @@
 
 %arrow
 \draw[-{Latex[width=2cm, length=1cm]},line width=20pt, colorThree]
-	($(box1.south)+(0, -0.5cm)$) -- ++(0, -3cm);
+	($(box1.south)+(0, -0.5cm)$) -- ++(0, -2cm);
 
 \end{tikzpicture}
 }
@@ -265,6 +278,8 @@
 \end{figure}	
 	
 \end{frame}
+
+\subsection{Proof Generation}
 
 \begin{frame}
 \frametitle{Generating Isabelle Proofs}
@@ -375,6 +390,8 @@ MetiTarski requirements:
 \end{minipage}
 	
 \end{frame}
+
+\section{Summary}
 
 \begin{frame}
 \frametitle{What we have so far}
