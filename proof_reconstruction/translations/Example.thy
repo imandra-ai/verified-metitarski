@@ -82,9 +82,7 @@ begin
     by mt_arith
 end      
         
-notepad    then have "\<And>r ra. ra < - 1 \<or> \<not> lgen False r (1 + ra) \<or> r \<le> exp ra"
-      using ff13 by metis (* 4 ms *)
-    then have "\<And>r ra. (1::real) + ra < r \<or> ra < - 1 \<or> r \<le> exp ra"
+notepad
 begin  
   have " \<And>r ra X.\<not> (1 / 2 * (ra + 5) * (ra - 1) / (2 * ra + 1)) \<le> r \<or> r \<le> 0 \<or> ra \<le> (X::real)"  
     sorry
