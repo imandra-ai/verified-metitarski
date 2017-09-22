@@ -1,4 +1,4 @@
-fof(Conjecture,conjecture, ![X] : (![Y] : ((0 <= X) & (X <= 1) & (0 <= Y) & (Y <= 1) => (exp((X + Y)) <= ((exp(X) * exp(Y)) + pow(2, 8) ))))).
+fof(Conjecture,conjecture, ![X] : (![Y] : ((0 <= X) & (X <= 1) & (0 <= Y) & (Y <= 1) => (exp((X + Y)) <= ((exp(X) * exp(Y)) + (2 ^- 8) ))))).
 
 %include('Axioms/general.ax').
 %include('Axioms/abs.ax').
